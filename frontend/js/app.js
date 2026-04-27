@@ -1,4 +1,4 @@
-const strBaseURL = 'http://localhost:8000'
+const strBaseURL = ''
 
 // ===================================================
 // Navigation of the site (basically open forms)

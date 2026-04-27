@@ -33,6 +33,7 @@ const express = require('express')
 const cors = require('cors')
 const sqlite3 = require('sqlite3').verbose()
 const { v4: uuidv4 } = require('uuid') 
+const path = require('path')
 require('dotenv').config()
 
 const app = express()
@@ -41,6 +42,7 @@ const PORT = 8000
 // Middleware stuff
 app.use(cors())
 app.use(express.json())
+app.use(express.static(path.join(__dirname, '..', 'frontend')))
 
 //Database connection
 const db = new sqlite3.Database('resume.db', (err) => {
@@ -54,6 +56,11 @@ const db = new sqlite3.Database('resume.db', (err) => {
 // This a route to test connection
 app.get('/ping', (req,res) => {
     res.json({ message: 'Server is alive' })
+})
+
+// Serve frontend SPA from express
+app.get('/', (req,res) => {
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'))
 })
 
 // ===================================================================
@@ -477,5 +484,4 @@ app.delete('/api/awards/:id', (req,res,next) => {
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`)
 })
-
 
