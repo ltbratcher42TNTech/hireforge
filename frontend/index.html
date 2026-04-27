@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Resume Builder</title>
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">Resume Builder</h1>
+
+    <!-- Navigation -->
+    <nav aria-label="Main navigation" class="mb-4">
+        <button class="btn btn-primary me-2" id="btnNavDashboard">Dashboard</button>
+        <button class="btn btn-primary me-2" id="btnNavJobs">Jobs</button>
+        <button class="btn btn-primary me-2" id="btnNavSkills">Skills</button>
+        <button class="btn btn-primary me-2" id="btnNavResume">Resume</button>
+    </nav>
+
+    <!-- Dashboard -->
+    <div id="dashboardSection">
+        <h3>Dashboard</h3>
+        <p>Welcome! Start building your resume.</p>
+    </div>
+
+    <!-- Jobs -->
+    <div id="jobsSection" style="display:none;">
+        <h3>Jobs</h3>
+        <div class="card p-3 mb-3">
+            <input type="text" id="txtTitle" class="form-control mb-2" placeholder="Job Title" aria-label="Job Title">
+            <input type="text" id="txtCompany" class="form-control mb-2" placeholder="Company" aria-label="Company">
+            <input type="date" id="txtStartDate" class="form-control mb-2" aria-label="Start Date">
+            <input type="date" id="txtEndDate" class="form-control mb-2" aria-label="End Date">
+            <button class="btn btn-success" id="btnAddJob">Add Job</button>
+        </div>
+        <div id="divJobs"></div>
+        <!-- Job Details View -->
+        <div id="divJobDetailsView" style="display:none;">
+            <button class="btn btn-secondary mb-3" id="btnBackToJobs">← Back</button>
+            <h4 id="txtSelectedJob"></h4>
+            <div id="divDetailList" class="mb-3"></div>
+            <div class="card p-3">
+                <input type="text" id="txtDetail" class="form-control mb-2" placeholder="Add a bullet point" aria-label="Job detail">
+                <button class="btn btn-success" id="btnAddDetail">Add Bullet</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Skills -->
+    <div id="skillsSection" style="display:none;">
+        <h3>Skills</h3>
+        <div class="card p-3 mb-3">
+            <input type="text" id="txtSkillName" class="form-control mb-2" placeholder="Skill Name" aria-label="Skill Name">
+            <button class="btn btn-success" id="btnAddSkill">Add Skill</button>
+        </div>
+        <div id="divSkills"></div>
+    </div>
+
+    <!-- Resume -->
+    <div id="resumeSection" style="display:none;">
+        <h3>Resume Preview</h3>
+        <div class="card p-3">
+            <p>Your resume will appear here.</p>
+        </div>
+    </div>
+</div>
+
+<script src="assets/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
