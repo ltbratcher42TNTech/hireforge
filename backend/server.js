@@ -42,7 +42,10 @@ const PORT = 8000
 // Middleware stuff
 app.use(cors())
 app.use(express.json())
+<<<<<<< HEAD
 // Ai used for this
+=======
+>>>>>>> 7076cff34f570e7ba8313562737e2c5d3b3c22c9
 app.use(express.static(path.join(__dirname, '..', 'frontend')))
 
 //Database connection
@@ -64,6 +67,7 @@ app.get('/', (req,res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'))
 })
 
+<<<<<<< HEAD
 // ===================================================================
 // PROFILE ROUTES BELOW
 // ===================================================================
@@ -184,6 +188,8 @@ app.put('/api/profile/:id', (req,res,next) => {
     })
 })
 
+=======
+>>>>>>> 7076cff34f570e7ba8313562737e2c5d3b3c22c9
 // ===================================================================
 // JOB ROUTES BELOW
 // ===================================================================
@@ -605,5 +611,4 @@ app.delete('/api/awards/:id', (req,res,next) => {
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`)
 })
-
 
