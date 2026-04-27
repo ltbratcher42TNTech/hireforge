@@ -33,6 +33,7 @@ const express = require('express')
 const cors = require('cors')
 const sqlite3 = require('sqlite3').verbose()
 const { v4: uuidv4 } = require('uuid') 
+const path = require('path')
 require('dotenv').config()
 
 const app = express()
@@ -41,6 +42,8 @@ const PORT = 8000
 // Middleware stuff
 app.use(cors())
 app.use(express.json())
+// Ai used for this
+app.use(express.static(path.join(__dirname, '..', 'frontend')))
 
 //Database connection
 const db = new sqlite3.Database('resume.db', (err) => {
@@ -54,6 +57,131 @@ const db = new sqlite3.Database('resume.db', (err) => {
 // This a route to test connection
 app.get('/ping', (req,res) => {
     res.json({ message: 'Server is alive' })
+})
+
+// Serve frontend SPA from express
+app.get('/', (req,res) => {
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'))
+})
+
+// ===================================================================
+// PROFILE ROUTES BELOW
+// ===================================================================
+
+// POST create profile
+app.post('/api/profile', (req,res,next) => {
+    const strProfileID = uuidv4()
+    const strFullName = req.body.fullName ? req.body.fullName.trim() : ""
+    const strEmail = req.body.email ? req.body.email.trim() : ""
+    const strPhone = req.body.phone ? req.body.phone.trim() : ""
+    const strLocation = req.body.location ? req.body.location.trim() : ""
+    const strLinkedIn = req.body.linkedIn ? req.body.linkedIn.trim() : ""
+    const strGitHub = req.body.gitHub ? req.body.gitHub.trim() : ""
+    const strWebsite = req.body.website ? req.body.website.trim() : ""
+
+    if (!strFullName || !strEmail) {
+        return res.status(400).json({ message: "Full name and email are required" })
+    }
+
+    const strCheckQuery = `SELECT ProfileID FROM tblProfile LIMIT 1`
+
+    db.get(strCheckQuery, [], (err, objRow) => {
+        if (err) {
+            console.error("Error checking existing profile:", err.message)
+            return res.status(500).json({ message: "Failed to check profile" })
+        }
+
+        if (objRow) {
+            return res.status(409).json({ message: "Profile already exists. Please edit profile instead." })
+        }
+
+        const strInsertQuery = `INSERT INTO tblProfile (ProfileID, FullName, Email, Phone, Location, LinkedIn, GitHub, Website) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+
+        db.run(strInsertQuery, [strProfileID, strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite], (err) => {
+            if (err) {
+                console.error("Error creating profile:", err.message)
+                return res.status(500).json({ message: "Failed to create profile" })
+            }
+
+            return res.status(201).json({
+                message: "Profile created successfully",
+                profile: {
+                    ProfileID: strProfileID,
+                    FullName: strFullName,
+                    Email: strEmail,
+                    Phone: strPhone,
+                    Location: strLocation,
+                    LinkedIn: strLinkedIn,
+                    GitHub: strGitHub,
+                    Website: strWebsite
+                }
+            })
+        })
+    })
+})
+
+// GET profile
+app.get('/api/profile', (req,res,next) => {
+    const strQuery = `SELECT * FROM tblProfile LIMIT 1`
+
+    db.get(strQuery, [], (err, objRow) => {
+        if (err) {
+            console.error("Error getting profile:", err.message)
+            return res.status(500).json({ message: "Failed to get profile" })
+        }
+
+        if (!objRow) {
+            return res.status(404).json({ message: "Profile not found" })
+        }
+
+        return res.status(200).json({
+            message: "Profile retrieved successfully",
+            profile: objRow
+        })
+    })
+})
+
+// PUT update profile
+app.put('/api/profile/:id', (req,res,next) => {
+    const strProfileID = req.params.id
+    const strFullName = req.body.fullName ? req.body.fullName.trim() : ""
+    const strEmail = req.body.email ? req.body.email.trim() : ""
+    const strPhone = req.body.phone ? req.body.phone.trim() : ""
+    const strLocation = req.body.location ? req.body.location.trim() : ""
+    const strLinkedIn = req.body.linkedIn ? req.body.linkedIn.trim() : ""
+    const strGitHub = req.body.gitHub ? req.body.gitHub.trim() : ""
+    const strWebsite = req.body.website ? req.body.website.trim() : ""
+
+    if (!strFullName || !strEmail) {
+        return res.status(400).json({ message: "Full name and email are required" })
+    }
+
+    const strQuery = `UPDATE tblProfile SET FullName=?, Email=?, Phone=?, Location=?, LinkedIn=?, GitHub=?, Website=? WHERE ProfileID=?`
+
+    db.run(strQuery, [strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite, strProfileID], function (err) {
+        if (err) {
+            console.error("Error updating profile:", err.message)
+            return res.status(500).json({ message: "Failed to update profile" })
+        }
+
+        if (this.changes === 0) {
+            return res.status(404).json({ message: "Profile not found" })
+        }
+
+        return res.status(200).json({
+            message: "Profile updated successfully",
+            profile: {
+                ProfileID: strProfileID,
+                FullName: strFullName,
+                Email: strEmail,
+                Phone: strPhone,
+                Location: strLocation,
+                LinkedIn: strLinkedIn,
+                GitHub: strGitHub,
+                Website: strWebsite
+            }
+        })
+    })
 })
 
 // ===================================================================
