@@ -8,6 +8,8 @@ const showSection = (strSectionName) => {
     document.getElementById('dashboardSection').style.display = 'none'
     document.getElementById('jobsSection').style.display = 'none'
     document.getElementById('skillsSection').style.display = 'none'
+    document.getElementById('certsSection').style.display = 'none'
+    document.getElementById('awardsSection').style.display = 'none'
     document.getElementById('resumeSection').style.display = 'none'
     document.getElementById(strSectionName + 'Section').style.display = 'block'
 }
@@ -23,6 +25,17 @@ document.querySelector('#btnNavJobs').addEventListener('click', () => {
 
 document.querySelector('#btnNavSkills').addEventListener('click', () => {
     showSection('skills')
+    loadCategories()
+})
+
+document.querySelector('#btnNavCerts').addEventListener('click', () => {
+    showSection('certs')
+    loadCerts()
+})
+
+document.querySelector('#btnNavAwards').addEventListener('click', () => {
+    showSection('awards')
+    loadAwards()
 })
 
 document.querySelector('#btnNavResume').addEventListener('click', () => {
@@ -235,3 +248,330 @@ document.querySelector('#btnAddJob').addEventListener('click', async () => {
     loadJobs() // refresh list
 })
 
+// ===================================================
+// Skills
+// ===================================================
+
+// init
+let strCurrentCategoryID = ''
+
+
+const loadCategories = async () => {
+    const objResponse = await fetch(`${strBaseURL}/api/skillcategories`)
+    const objData = await objResponse.json()
+    const arrCategories = objData.data
+
+    const divCategories = document.querySelector('#divCategories')
+    divCategories.innerHTML = ''
+
+    arrCategories.forEach(function(objCategory) {
+        divCategories.innerHTML += `
+            <div class="card p-3 mb-2 btnSelectCategory" style="cursor:pointer;" data-id="${objCategory.CategoryID}" data-name="${objCategory.Name}">
+                <strong>${objCategory.Name}</strong>
+                <button class="btn btn-danger btn-sm mt-2 btnDeleteCategory" data-id="${objCategory.CategoryID}">Delete</button>
+            </div>
+        `
+    })
+}
+
+const loadSkills = async (strCategoryID) => {
+    const objResponse = await fetch(`${strBaseURL}/api/skills?categoryId=${strCategoryID}`)
+    const objData = await objResponse.json()
+    const arrSkills = objData.data
+
+    const divSkillList = document.querySelector('#divSkillList')
+    divSkillList.innerHTML = ''
+
+    arrSkills.forEach(function(objSkill) {
+        divSkillList.innerHTML += `
+            <div class="card p-2 mb-1">
+                - ${objSkill.Name}
+                <span class="text-danger btnDeleteSkill" style="cursor:pointer; font-size:0.8rem;" data-id="${objSkill.SkillID}">remove</span>
+            </div>
+        `
+    })
+}
+// Handles deleting (and subsequently refreshing) and selecting skills categories
+document.querySelector('#divCategories').addEventListener('click', async function(objEvent) {
+    if (objEvent.target.classList.contains('btnDeleteCategory')) {
+        const strCategoryID = objEvent.target.dataset.id
+
+        const objResponse = await fetch(`${strBaseURL}/api/skillcategories/${strCategoryID}`, {
+            method: 'DELETE'
+        })
+        const objData = await objResponse.json()
+
+        if (objResponse.status !== 200) {
+            alert(objData.message)
+            return
+        }
+
+        loadCategories()
+        return
+    }
+
+    const divCategory = objEvent.target.closest('.btnSelectCategory')
+    if (divCategory) {
+        strCurrentCategoryID = divCategory.dataset.id
+        const strName = divCategory.dataset.name
+
+        document.querySelector('#txtSelectedCategory').innerText = strName
+        document.querySelector('#divCategoryView').style.display = 'none'
+        document.querySelector('#divSkillView').style.display = 'block'
+        loadSkills(strCurrentCategoryID)
+    }
+})
+
+// Simply handles a back button
+document.querySelector('#btnBackToCategories').addEventListener('click', function() {
+    document.querySelector('#divSkillView').style.display = 'none'
+    document.querySelector('#divCategoryView').style.display = 'block'
+    loadCategories()
+})
+
+// Handles deletion of skills
+document.querySelector('#divSkillList').addEventListener('click', async function(objEvent) {
+    if (objEvent.target.classList.contains('btnDeleteSkill')) {
+        const strSkillID = objEvent.target.dataset.id
+
+        const objResponse = await fetch(`${strBaseURL}/api/skills/${strSkillID}`, {
+            method: 'DELETE'
+        })
+        const objData = await objResponse.json()
+
+        if (objResponse.status !== 200) {
+            alert(objData.message)
+            return
+        }
+
+        loadSkills(strCurrentCategoryID)
+    }
+})
+
+// To POST Categories
+document.querySelector('#btnAddCategory').addEventListener('click', async function() {
+    const strName = document.querySelector('#txtCategoryName').value.trim()
+
+    if (!strName) {
+        alert('Category name is required')
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/skillcategories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: strName })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    document.querySelector('#txtCategoryName').value = ''
+    loadCategories()
+})
+
+// POST method for skill
+document.querySelector('#btnAddSkill').addEventListener('click', async function() {
+    const strName = document.querySelector('#txtSkillName').value.trim()
+
+    if (!strName) {
+        alert('Skill name is required')
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/skills`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: strName, categoryId: strCurrentCategoryID })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    document.querySelector('#txtSkillName').value = ''
+    loadSkills(strCurrentCategoryID)
+})
+
+// ===================================================
+// Certifications
+// ===================================================
+
+const loadCerts = async () => {
+    const objResponse = await fetch(`${strBaseURL}/api/certifications`)
+    const objData = await objResponse.json()
+    const arrCerts = objData.data
+
+    const divCerts = document.querySelector('#divCerts')
+    divCerts.innerHTML = ''
+
+    arrCerts.forEach(function(objCert) {
+        divCerts.innerHTML += `
+            <div class="card p-3 mb-2">
+                <strong>${objCert.Name}</strong> — ${objCert.Issuer}
+                <br>
+                <small>${objCert.DateEarned}</small>
+                <span class="text-danger btnDeleteCert" style="cursor:pointer; font-size:0.8rem;" data-id="${objCert.CertID}">remove</span>
+            </div>
+        `
+    })
+}
+
+document.querySelector('#divCerts').addEventListener('click', async function(objEvent) {
+    if (objEvent.target.classList.contains('btnDeleteCert')) {
+        const strCertID = objEvent.target.dataset.id
+
+        const objResponse = await fetch(`${strBaseURL}/api/certifications/${strCertID}`, {
+            method: 'DELETE'
+        })
+        const objData = await objResponse.json()
+
+        if (objResponse.status !== 200) {
+            alert(objData.message)
+            return
+        }
+
+        loadCerts()
+    }
+})
+
+document.querySelector('#btnAddCert').addEventListener('click', async function() {
+    const strName = document.querySelector('#txtCertName').value.trim()
+    const strIssuer = document.querySelector('#txtCertIssuer').value.trim()
+    const strDate = document.querySelector('#txtCertDate').value
+
+    let blnError = false
+    let strMessage = ''
+
+    if (!strName) {
+        blnError = true
+        strMessage += '<p>Certification name is required</p>'
+    }
+    if (!strIssuer) {
+        blnError = true
+        strMessage += '<p>Issuer is required</p>'
+    }
+    if (!strDate) {
+        blnError = true
+        strMessage += '<p>Date is required</p>'
+    }
+
+    if (blnError) {
+        alert(strMessage)
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/certifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: strName, issuer: strIssuer, dateEarned: strDate })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    document.querySelector('#txtCertName').value = ''
+    document.querySelector('#txtCertIssuer').value = ''
+    document.querySelector('#txtCertDate').value = ''
+
+    loadCerts()
+})
+
+// ===================================================
+// Awards
+// ===================================================
+
+const loadAwards = async () => {
+    const objResponse = await fetch(`${strBaseURL}/api/awards`)
+    const objData = await objResponse.json()
+    const arrAwards = objData.data
+
+    const divAwards = document.querySelector('#divAwards')
+    divAwards.innerHTML = ''
+
+    arrAwards.forEach(function(objAward) {
+        divAwards.innerHTML += `
+            <div class="card p-3 mb-2">
+                <strong>${objAward.Name}</strong> — ${objAward.Issuer}
+                <br>
+                <small>${objAward.DateEarned}</small>
+                <br>
+                ${objAward.Description}
+                <span class="text-danger btnDeleteAward" style="cursor:pointer; font-size:0.8rem;" data-id="${objAward.AwardID}">remove</span>
+            </div>
+        `
+    })
+}
+
+document.querySelector('#divAwards').addEventListener('click', async function(objEvent) {
+    if (objEvent.target.classList.contains('btnDeleteAward')) {
+        const strAwardID = objEvent.target.dataset.id
+
+        const objResponse = await fetch(`${strBaseURL}/api/awards/${strAwardID}`, {
+            method: 'DELETE'
+        })
+        const objData = await objResponse.json()
+
+        if (objResponse.status !== 200) {
+            alert(objData.message)
+            return
+        }
+
+        loadAwards()
+    }
+})
+
+document.querySelector('#btnAddAward').addEventListener('click', async function() {
+    const strName = document.querySelector('#txtAwardName').value.trim()
+    const strIssuer = document.querySelector('#txtAwardIssuer').value.trim()
+    const strDate = document.querySelector('#txtAwardDate').value
+    const strDescription = document.querySelector('#txtAwardDescription').value.trim()
+
+    let blnError = false
+    let strMessage = ''
+
+    if (!strName) {
+        blnError = true
+        strMessage += '<p>Award name is required</p>'
+    }
+    if (!strDate) {
+        blnError = true
+        strMessage += '<p>Date is required</p>'
+    }
+
+    if (blnError) {
+        alert(strMessage)
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/awards`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: strName, issuer: strIssuer, dateEarned: strDate, description: strDescription })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    document.querySelector('#txtAwardName').value = ''
+    document.querySelector('#txtAwardIssuer').value = ''
+    document.querySelector('#txtAwardDate').value = ''
+    document.querySelector('#txtAwardDescription').value = ''
+
+    loadAwards()
+})

@@ -6,6 +6,7 @@
     <title>Resume Builder</title>
     <link rel="stylesheet" href="assets/bootstrap.min.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="assets/sandstone.css"
 </head>
 <body>
 <div class="container mt-4">
@@ -16,8 +17,25 @@
         <button class="btn btn-primary me-2" id="btnNavDashboard">Dashboard</button>
         <button class="btn btn-primary me-2" id="btnNavJobs">Jobs</button>
         <button class="btn btn-primary me-2" id="btnNavSkills">Skills</button>
+        <button class="btn btn-primary me-2" id="btnNavCerts">Certifications</button>
+        <button class="btn btn-primary me-2" id="btnNavAwards">Awards</button>
         <button class="btn btn-primary me-2" id="btnNavResume">Resume</button>
     </nav>
+
+<!-- Ideas
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Resume Builder</h1>
+    <div>
+        <button class="btn btn-outline-primary me-2" id="btnNavDashboard">Dashboard</button>
+        <button class="btn btn-outline-primary me-2" id="btnNavJobs">Jobs</button>
+        <button class="btn btn-outline-primary me-2" id="btnNavSkills">Skills</button>
+        <button class="btn btn-outline-primary me-2" id="btnNavCerts">Certifications</button>
+        <button class="btn btn-outline-primary me-2" id="btnNavAwards">Awards</button>
+        <button class="btn btn-primary" id="btnNavResume">Resume</button>
+    </div>
+
+-->
 
     <!-- Dashboard -->
     <div id="dashboardSection">
@@ -38,7 +56,7 @@
         <div id="divJobs"></div>
         <!-- Job Details View -->
         <div id="divJobDetailsView" style="display:none;">
-            <button class="btn btn-secondary mb-3" id="btnBackToJobs">← Back</button>
+            <button class="btn btn-secondary mb-3" id="btnBackToJobs">Back</button>
             <h4 id="txtSelectedJob"></h4>
             <div id="divDetailList" class="mb-3"></div>
             <div class="card p-3">
@@ -47,16 +65,58 @@
             </div>
         </div>
     </div>
-    
+
+
     <!-- Skills -->
-    <div id="skillsSection" style="display:none;">
+    <div id="skillsSection" style="display:none">
         <h3>Skills</h3>
-        <div class="card p-3 mb-3">
-            <input type="text" id="txtSkillName" class="form-control mb-2" placeholder="Skill Name" aria-label="Skill Name">
-            <button class="btn btn-success" id="btnAddSkill">Add Skill</button>
+        
+        <!-- Skills category view -->
+        <div id="divCategoryView">
+            <div class="card p-3 mb-3">
+                <input type="text" id="txtCategoryName" class="form-control mb-2" placeholder="Category Name" aria-label="Category Name">
+                <button class="btn btn-success" id="btnAddCategory">Add Category</button>
+            </div>
+            <div id="divCategories"></div>
+         </div>
+
+         <!-- Skills view (this will be a sort of drilldown) -->
+        <div id="divSkillView" style="display:none">
+            <button class="btn btn-secondary mb-3" id="btnBackToCategories">Back</button>  
+            <h4 id="txtSelectedCategory"></h4>
+            <div id="divSkillList" class="mb-3"></div>
+            <div class="card p-3">
+                <input type="text" id="txtSkillName" class="form-control mb-2" placeholder="Skill Name" aria-label="Skill Name">
+                <button class="btn btn-success" id="btnAddSkill">Add Skill</button>
+            </div>
         </div>
-        <div id="divSkills"></div>
     </div>
+
+    <!-- Certifications -->
+    <div id="certsSection" style="display:none;">
+        <h3>Certifications</h3>
+        <div class="card p-3 mb-3">
+            <input type="text" id="txtCertName" class="form-control mb-2" placeholder="Certification Name" aria-label="Certification Name">
+            <input type="text" id="txtCertIssuer" class="form-control mb-2" placeholder="Issuer" aria-label="Issuer">
+            <input type="date" id="txtCertDate" class="form-control mb-2" aria-label="Date Earned">
+            <button class="btn btn-success" id="btnAddCert">Add Certification</button>
+        </div>
+        <div id="divCerts"></div>
+    </div>
+
+    <!-- Awards -->
+    <div id="awardsSection" style="display:none;">
+        <h3>Awards</h3>
+        <div class="card p-3 mb-3">
+            <input type="text" id="txtAwardName" class="form-control mb-2" placeholder="Award Name" aria-label="Award Name">
+            <input type="text" id="txtAwardIssuer" class="form-control mb-2" placeholder="Issuer" aria-label="Issuer">
+            <input type="date" id="txtAwardDate" class="form-control mb-2" aria-label="Date Earned">
+            <textarea id="txtAwardDescription" class="form-control mb-2" placeholder="Description" aria-label="Description"></textarea>
+            <button class="btn btn-success" id="btnAddAward">Add Award</button>
+        </div>
+        <div id="divAwards"></div>
+    </div>
+
 
     <!-- Resume -->
     <div id="resumeSection" style="display:none;">
