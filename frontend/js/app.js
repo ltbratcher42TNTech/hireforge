@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 //const strBaseURL = 'http://localhost:8000'
+=======
+>>>>>>> 7076cff34f570e7ba8313562737e2c5d3b3c22c9
 const strBaseURL = ''
 
 // ===================================================
