@@ -1,3 +1,4 @@
+//const strBaseURL = 'http://localhost:8000'
 const strBaseURL = ''
 
 // ===================================================
@@ -18,6 +19,14 @@ const showSection = (strSectionName) => {
     if (objTargetSection) {
         objTargetSection.style.display = 'block'
     }
+    document.getElementById('dashboardSection').style.display = 'none'
+    document.getElementById('profileSection').style.display = 'none'
+    document.getElementById('jobsSection').style.display = 'none'
+    document.getElementById('skillsSection').style.display = 'none'
+    document.getElementById('certsSection').style.display = 'none'
+    document.getElementById('awardsSection').style.display = 'none'
+    document.getElementById('resumeSection').style.display = 'none'
+    document.getElementById(strSectionName + 'Section').style.display = 'block'
 }
 
 document.querySelector('#btnNavDashboard').addEventListener('click', () => {
@@ -97,6 +106,34 @@ const loadProfile = async () => {
     } catch (error) {
         document.querySelector('#pProfileStatus').innerText = 'Unable to connect to the profile service right now.'
     }
+
+const loadProfile = async () => {
+    const objResponse = await fetch(`${strBaseURL}/api/profile`)
+
+    if (objResponse.status === 404) {
+        clearProfileForm()
+        document.querySelector('#pProfileStatus').innerText = 'No profile saved yet.'
+        return
+    }
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200) {
+        alert(objData.message)
+        return
+    }
+
+    const objProfile = objData.profile
+    strCurrentProfileID = objProfile.ProfileID
+
+    document.querySelector('#txtFullName').value = objProfile.FullName || ''
+    document.querySelector('#txtEmail').value = objProfile.Email || ''
+    document.querySelector('#txtPhone').value = objProfile.Phone || ''
+    document.querySelector('#txtLocation').value = objProfile.Location || ''
+    document.querySelector('#txtLinkedIn').value = objProfile.LinkedIn || ''
+    document.querySelector('#txtGitHub').value = objProfile.GitHub || ''
+    document.querySelector('#txtWebsite').value = objProfile.Website || ''
+    document.querySelector('#pProfileStatus').innerText = 'Profile loaded.'
 }
 
 const clearProfileForm = () => {
