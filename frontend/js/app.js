@@ -1,21 +1,33 @@
-const strBaseURL = 'http://localhost:8000'
+const strBaseURL = ''
 
 // ===================================================
 // Navigation of the site (basically open forms)
 // ===================================================
 
 const showSection = (strSectionName) => {
-    document.getElementById('dashboardSection').style.display = 'none'
-    document.getElementById('jobsSection').style.display = 'none'
-    document.getElementById('skillsSection').style.display = 'none'
-    document.getElementById('certsSection').style.display = 'none'
-    document.getElementById('awardsSection').style.display = 'none'
-    document.getElementById('resumeSection').style.display = 'none'
-    document.getElementById(strSectionName + 'Section').style.display = 'block'
+    const arrSections = ['dashboard', 'profile', 'jobs', 'skills', 'certs', 'awards', 'resume']
+
+    arrSections.forEach((strName) => {
+        const objSection = document.getElementById(strName + 'Section')
+        if (objSection) {
+            objSection.style.display = 'none'
+        }
+    })
+
+    const objTargetSection = document.getElementById(strSectionName + 'Section')
+    if (objTargetSection) {
+        objTargetSection.style.display = 'block'
+    }
 }
 
 document.querySelector('#btnNavDashboard').addEventListener('click', () => {
     showSection('dashboard')
+})
+
+document.querySelector('#btnNavProfile').addEventListener('click', () => {
+    showSection('profile')
+    loadProfile()
+    loadGeminiKeySettings()
 })
 
 document.querySelector('#btnNavJobs').addEventListener('click', () => {
@@ -40,6 +52,172 @@ document.querySelector('#btnNavAwards').addEventListener('click', () => {
 
 document.querySelector('#btnNavResume').addEventListener('click', () => {
     showSection('resume')
+})
+
+// ===================================================
+// Profile
+// ===================================================
+
+let strCurrentProfileID = ''
+const strGeminiStorageKey = 'resumeBuilderGeminiApiKey'
+
+const loadProfile = async () => {
+    try {
+        const objResponse = await fetch(`${strBaseURL}/api/profile`)
+        let objData = { message: 'Unable to read response', profile: null }
+
+        try {
+            objData = await objResponse.json()
+        } catch (error) {
+            objData = { message: 'Profile response was not valid JSON', profile: null }
+        }
+
+        if (objResponse.status === 404) {
+            clearProfileForm()
+            document.querySelector('#pProfileStatus').innerText = 'No profile saved yet.'
+            return
+        }
+
+        if (objResponse.status !== 200) {
+            document.querySelector('#pProfileStatus').innerText = objData.message || 'Unable to load profile right now.'
+            return
+        }
+
+        const objProfile = objData.profile
+        strCurrentProfileID = objProfile.ProfileID
+
+        document.querySelector('#txtFullName').value = objProfile.FullName || ''
+        document.querySelector('#txtEmail').value = objProfile.Email || ''
+        document.querySelector('#txtPhone').value = objProfile.Phone || ''
+        document.querySelector('#txtLocation').value = objProfile.Location || ''
+        document.querySelector('#txtLinkedIn').value = objProfile.LinkedIn || ''
+        document.querySelector('#txtGitHub').value = objProfile.GitHub || ''
+        document.querySelector('#txtWebsite').value = objProfile.Website || ''
+        document.querySelector('#pProfileStatus').innerText = 'Profile loaded.'
+    } catch (error) {
+        document.querySelector('#pProfileStatus').innerText = 'Unable to connect to the profile service right now.'
+    }
+}
+
+const clearProfileForm = () => {
+    strCurrentProfileID = ''
+    document.querySelector('#txtFullName').value = ''
+    document.querySelector('#txtEmail').value = ''
+    document.querySelector('#txtPhone').value = ''
+    document.querySelector('#txtLocation').value = ''
+    document.querySelector('#txtLinkedIn').value = ''
+    document.querySelector('#txtGitHub').value = ''
+    document.querySelector('#txtWebsite').value = ''
+}
+
+document.querySelector('#btnSaveProfile').addEventListener('click', async () => {
+    let strFullName = document.querySelector('#txtFullName').value.trim()
+    let strEmail = document.querySelector('#txtEmail').value.trim()
+    let strPhone = document.querySelector('#txtPhone').value.trim()
+    let strLocation = document.querySelector('#txtLocation').value.trim()
+    let strLinkedIn = document.querySelector('#txtLinkedIn').value.trim()
+    let strGitHub = document.querySelector('#txtGitHub').value.trim()
+    let strWebsite = document.querySelector('#txtWebsite').value.trim()
+
+    let blnError = false
+    let strMessage = ''
+
+    if (!strFullName) {
+        blnError = true
+        strMessage += '<p>Full name is required</p>'
+    }
+
+    if (!strEmail) {
+        blnError = true
+        strMessage += '<p>Email is required</p>'
+    }
+
+    if (blnError) {
+        alert(strMessage)
+        return
+    }
+
+    let strURL = `${strBaseURL}/api/profile`
+    let strMethod = 'POST'
+
+    if (strCurrentProfileID) {
+        strURL = `${strBaseURL}/api/profile/${strCurrentProfileID}`
+        strMethod = 'PUT'
+    }
+
+    const objResponse = await fetch(strURL, {
+        method: strMethod,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            fullName: strFullName,
+            email: strEmail,
+            phone: strPhone,
+            location: strLocation,
+            linkedIn: strLinkedIn,
+            gitHub: strGitHub,
+            website: strWebsite
+        })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200 && objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    strCurrentProfileID = objData.profile.ProfileID
+    document.querySelector('#pProfileStatus').innerText = 'Profile saved successfully.'
+})
+
+const loadGeminiKeySettings = async () => {
+    const strSavedGeminiKey = localStorage.getItem(strGeminiStorageKey) || ''
+    document.querySelector('#txtGeminiApiKey').value = strSavedGeminiKey
+
+    try {
+        const objResponse = await fetch(`${strBaseURL}/api/ai/config`)
+        const objData = await objResponse.json()
+
+        if (objResponse.status !== 200) {
+            document.querySelector('#pGeminiKeyStatus').innerText = strSavedGeminiKey
+                ? 'Personal Gemini key loaded from browser.'
+                : 'No personal key saved yet.'
+            return
+        }
+
+        if (strSavedGeminiKey) {
+            document.querySelector('#pGeminiKeyStatus').innerText = 'Personal Gemini key loaded from browser.'
+            return
+        }
+
+        if (objData.hasServerGeminiKey) {
+            document.querySelector('#pGeminiKeyStatus').innerText = 'Server Gemini key detected (.env fallback is available).'
+        } else {
+            document.querySelector('#pGeminiKeyStatus').innerText = 'No Gemini key found yet. Save one here or add GEMINI_API_KEY to .env.'
+        }
+    } catch (error) {
+        document.querySelector('#pGeminiKeyStatus').innerText = strSavedGeminiKey
+            ? 'Personal Gemini key loaded from browser.'
+            : 'AI settings unavailable right now.'
+    }
+}
+
+document.querySelector('#btnSaveGeminiKey').addEventListener('click', () => {
+    const strGeminiKey = document.querySelector('#txtGeminiApiKey').value.trim()
+
+    if (!strGeminiKey) {
+        alert('Please enter a Gemini API key')
+        return
+    }
+
+    localStorage.setItem(strGeminiStorageKey, strGeminiKey)
+    document.querySelector('#pGeminiKeyStatus').innerText = 'Gemini API key saved in this browser.'
+})
+
+document.querySelector('#btnClearGeminiKey').addEventListener('click', () => {
+    localStorage.removeItem(strGeminiStorageKey)
+    document.querySelector('#txtGeminiApiKey').value = ''
+    document.querySelector('#pGeminiKeyStatus').innerText = 'Gemini API key cleared from this browser.'
 })
 
 // ===================================================
