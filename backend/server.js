@@ -111,6 +111,9 @@ app.post('/api/profile', (req,res,next) => {
     db.get(strCheckQuery, [], (err, objRow) => {
         if (handleProfileDbError(err, res, "Failed to check profile")) {
             return
+        if (err) {
+            console.error("Error checking existing profile:", err.message)
+            return res.status(500).json({ message: "Failed to check profile" })
         }
 
         if (objRow) {
@@ -122,6 +125,9 @@ app.post('/api/profile', (req,res,next) => {
         db.run(strInsertQuery, [strProfileID, strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite], (err) => {
             if (handleProfileDbError(err, res, "Failed to create profile")) {
                 return
+            if (err) {
+                console.error("Error creating profile:", err.message)
+                return res.status(500).json({ message: "Failed to create profile" })
             }
 
             return res.status(201).json({
@@ -148,6 +154,9 @@ app.get('/api/profile', (req,res,next) => {
     db.get(strQuery, [], (err, objRow) => {
         if (handleProfileDbError(err, res, "Failed to get profile")) {
             return
+        if (err) {
+            console.error("Error getting profile:", err.message)
+            return res.status(500).json({ message: "Failed to get profile" })
         }
 
         if (!objRow) {
@@ -181,6 +190,9 @@ app.put('/api/profile/:id', (req,res,next) => {
     db.run(strQuery, [strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite, strProfileID], function (err) {
         if (handleProfileDbError(err, res, "Failed to update profile")) {
             return
+        if (err) {
+            console.error("Error updating profile:", err.message)
+            return res.status(500).json({ message: "Failed to update profile" })
         }
 
         if (this.changes === 0) {
