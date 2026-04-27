@@ -42,10 +42,6 @@ const PORT = 8000
 // Middleware stuff
 app.use(cors())
 app.use(express.json())
-<<<<<<< HEAD
-// Ai used for this
-=======
->>>>>>> 7076cff34f570e7ba8313562737e2c5d3b3c22c9
 app.use(express.static(path.join(__dirname, '..', 'frontend')))
 
 //Database connection
@@ -62,15 +58,38 @@ app.get('/ping', (req,res) => {
     res.json({ message: 'Server is alive' })
 })
 
+// Simple AI config endpoint (for Phase 3 key handling)
+app.get('/api/ai/config', (req,res) => {
+    const blnHasServerGeminiKey = !!process.env.GEMINI_API_KEY
+
+    res.status(200).json({
+        hasServerGeminiKey: blnHasServerGeminiKey
+    })
+})
+
 // Serve frontend SPA from express
 app.get('/', (req,res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'))
 })
 
-<<<<<<< HEAD
 // ===================================================================
 // PROFILE ROUTES BELOW
 // ===================================================================
+
+const handleProfileDbError = (err, res, strFallbackMessage) => {
+    if (!err) {
+        return false
+    }
+
+    if (err.message && err.message.includes('no such table: tblProfile')) {
+        res.status(500).json({ message: "tblProfile does not exist yet. Please create it, then try again." })
+        return true
+    }
+
+    console.error(strFallbackMessage, err.message)
+    res.status(500).json({ message: strFallbackMessage })
+    return true
+}
 
 // POST create profile
 app.post('/api/profile', (req,res,next) => {
@@ -90,6 +109,8 @@ app.post('/api/profile', (req,res,next) => {
     const strCheckQuery = `SELECT ProfileID FROM tblProfile LIMIT 1`
 
     db.get(strCheckQuery, [], (err, objRow) => {
+        if (handleProfileDbError(err, res, "Failed to check profile")) {
+            return
         if (err) {
             console.error("Error checking existing profile:", err.message)
             return res.status(500).json({ message: "Failed to check profile" })
@@ -102,6 +123,8 @@ app.post('/api/profile', (req,res,next) => {
         const strInsertQuery = `INSERT INTO tblProfile (ProfileID, FullName, Email, Phone, Location, LinkedIn, GitHub, Website) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
         db.run(strInsertQuery, [strProfileID, strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite], (err) => {
+            if (handleProfileDbError(err, res, "Failed to create profile")) {
+                return
             if (err) {
                 console.error("Error creating profile:", err.message)
                 return res.status(500).json({ message: "Failed to create profile" })
@@ -129,6 +152,8 @@ app.get('/api/profile', (req,res,next) => {
     const strQuery = `SELECT * FROM tblProfile LIMIT 1`
 
     db.get(strQuery, [], (err, objRow) => {
+        if (handleProfileDbError(err, res, "Failed to get profile")) {
+            return
         if (err) {
             console.error("Error getting profile:", err.message)
             return res.status(500).json({ message: "Failed to get profile" })
@@ -163,6 +188,8 @@ app.put('/api/profile/:id', (req,res,next) => {
     const strQuery = `UPDATE tblProfile SET FullName=?, Email=?, Phone=?, Location=?, LinkedIn=?, GitHub=?, Website=? WHERE ProfileID=?`
 
     db.run(strQuery, [strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite, strProfileID], function (err) {
+        if (handleProfileDbError(err, res, "Failed to update profile")) {
+            return
         if (err) {
             console.error("Error updating profile:", err.message)
             return res.status(500).json({ message: "Failed to update profile" })
@@ -188,8 +215,6 @@ app.put('/api/profile/:id', (req,res,next) => {
     })
 })
 
-=======
->>>>>>> 7076cff34f570e7ba8313562737e2c5d3b3c22c9
 // ===================================================================
 // JOB ROUTES BELOW
 // ===================================================================
@@ -611,4 +636,3 @@ app.delete('/api/awards/:id', (req,res,next) => {
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`)
 })
-
