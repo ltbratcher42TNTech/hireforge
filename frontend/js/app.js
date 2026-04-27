@@ -1,3 +1,4 @@
+
 //const strBaseURL = 'http://localhost:8000'
 const strBaseURL = ''
 
@@ -6,19 +7,6 @@ const strBaseURL = ''
 // ===================================================
 
 const showSection = (strSectionName) => {
-    const arrSections = ['dashboard', 'profile', 'jobs', 'skills', 'certs', 'awards', 'resume']
-
-    arrSections.forEach((strName) => {
-        const objSection = document.getElementById(strName + 'Section')
-        if (objSection) {
-            objSection.style.display = 'none'
-        }
-    })
-
-    const objTargetSection = document.getElementById(strSectionName + 'Section')
-    if (objTargetSection) {
-        objTargetSection.style.display = 'block'
-    }
     document.getElementById('dashboardSection').style.display = 'none'
     document.getElementById('profileSection').style.display = 'none'
     document.getElementById('jobsSection').style.display = 'none'
@@ -36,7 +24,6 @@ document.querySelector('#btnNavDashboard').addEventListener('click', () => {
 document.querySelector('#btnNavProfile').addEventListener('click', () => {
     showSection('profile')
     loadProfile()
-    loadGeminiKeySettings()
 })
 
 document.querySelector('#btnNavJobs').addEventListener('click', () => {
@@ -68,44 +55,6 @@ document.querySelector('#btnNavResume').addEventListener('click', () => {
 // ===================================================
 
 let strCurrentProfileID = ''
-const strGeminiStorageKey = 'resumeBuilderGeminiApiKey'
-
-const loadProfile = async () => {
-    try {
-        const objResponse = await fetch(`${strBaseURL}/api/profile`)
-        let objData = { message: 'Unable to read response', profile: null }
-
-        try {
-            objData = await objResponse.json()
-        } catch (error) {
-            objData = { message: 'Profile response was not valid JSON', profile: null }
-        }
-
-        if (objResponse.status === 404) {
-            clearProfileForm()
-            document.querySelector('#pProfileStatus').innerText = 'No profile saved yet.'
-            return
-        }
-
-        if (objResponse.status !== 200) {
-            document.querySelector('#pProfileStatus').innerText = objData.message || 'Unable to load profile right now.'
-            return
-        }
-
-        const objProfile = objData.profile
-        strCurrentProfileID = objProfile.ProfileID
-
-        document.querySelector('#txtFullName').value = objProfile.FullName || ''
-        document.querySelector('#txtEmail').value = objProfile.Email || ''
-        document.querySelector('#txtPhone').value = objProfile.Phone || ''
-        document.querySelector('#txtLocation').value = objProfile.Location || ''
-        document.querySelector('#txtLinkedIn').value = objProfile.LinkedIn || ''
-        document.querySelector('#txtGitHub').value = objProfile.GitHub || ''
-        document.querySelector('#txtWebsite').value = objProfile.Website || ''
-        document.querySelector('#pProfileStatus').innerText = 'Profile loaded.'
-    } catch (error) {
-        document.querySelector('#pProfileStatus').innerText = 'Unable to connect to the profile service right now.'
-    }
 
 const loadProfile = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/profile`)
@@ -205,56 +154,6 @@ document.querySelector('#btnSaveProfile').addEventListener('click', async () => 
 
     strCurrentProfileID = objData.profile.ProfileID
     document.querySelector('#pProfileStatus').innerText = 'Profile saved successfully.'
-})
-
-const loadGeminiKeySettings = async () => {
-    const strSavedGeminiKey = localStorage.getItem(strGeminiStorageKey) || ''
-    document.querySelector('#txtGeminiApiKey').value = strSavedGeminiKey
-
-    try {
-        const objResponse = await fetch(`${strBaseURL}/api/ai/config`)
-        const objData = await objResponse.json()
-
-        if (objResponse.status !== 200) {
-            document.querySelector('#pGeminiKeyStatus').innerText = strSavedGeminiKey
-                ? 'Personal Gemini key loaded from browser.'
-                : 'No personal key saved yet.'
-            return
-        }
-
-        if (strSavedGeminiKey) {
-            document.querySelector('#pGeminiKeyStatus').innerText = 'Personal Gemini key loaded from browser.'
-            return
-        }
-
-        if (objData.hasServerGeminiKey) {
-            document.querySelector('#pGeminiKeyStatus').innerText = 'Server Gemini key detected (.env fallback is available).'
-        } else {
-            document.querySelector('#pGeminiKeyStatus').innerText = 'No Gemini key found yet. Save one here or add GEMINI_API_KEY to .env.'
-        }
-    } catch (error) {
-        document.querySelector('#pGeminiKeyStatus').innerText = strSavedGeminiKey
-            ? 'Personal Gemini key loaded from browser.'
-            : 'AI settings unavailable right now.'
-    }
-}
-
-document.querySelector('#btnSaveGeminiKey').addEventListener('click', () => {
-    const strGeminiKey = document.querySelector('#txtGeminiApiKey').value.trim()
-
-    if (!strGeminiKey) {
-        alert('Please enter a Gemini API key')
-        return
-    }
-
-    localStorage.setItem(strGeminiStorageKey, strGeminiKey)
-    document.querySelector('#pGeminiKeyStatus').innerText = 'Gemini API key saved in this browser.'
-})
-
-document.querySelector('#btnClearGeminiKey').addEventListener('click', () => {
-    localStorage.removeItem(strGeminiStorageKey)
-    document.querySelector('#txtGeminiApiKey').value = ''
-    document.querySelector('#pGeminiKeyStatus').innerText = 'Gemini API key cleared from this browser.'
 })
 
 // ===================================================
