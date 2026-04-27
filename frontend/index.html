@@ -6,7 +6,7 @@
     <title>Resume Builder</title>
     <link rel="stylesheet" href="assets/bootstrap.min.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="assets/sandstone.css"
+    <link rel="stylesheet" href="assets/lux.css"
 </head>
 <body>
 <div class="container mt-4">
@@ -15,6 +15,7 @@
     <!-- Navigation -->
     <nav aria-label="Main navigation" class="mb-4">
         <button class="btn btn-primary me-2" id="btnNavDashboard">Dashboard</button>
+        <button class="btn btn-primary me-2" id="btnNavProfile">Profile</button>
         <button class="btn btn-primary me-2" id="btnNavJobs">Jobs</button>
         <button class="btn btn-primary me-2" id="btnNavSkills">Skills</button>
         <button class="btn btn-primary me-2" id="btnNavCerts">Certifications</button>
@@ -41,6 +42,23 @@
     <div id="dashboardSection">
         <h3>Dashboard</h3>
         <p>Welcome! Start building your resume.</p>
+    </div>
+
+    <!-- Used codex to implement this, simply to see how it would do with little context -->
+    <!-- Profile -->
+    <div id="profileSection" style="display:none;">
+        <h3>Profile</h3>
+        <div class="card p-3 mb-3">
+            <input type="text" id="txtFullName" class="form-control mb-2" placeholder="Full Name" aria-label="Full Name">
+            <input type="email" id="txtEmail" class="form-control mb-2" placeholder="Email" aria-label="Email">
+            <input type="tel" id="txtPhone" class="form-control mb-2" placeholder="Phone" aria-label="Phone">
+            <input type="text" id="txtLocation" class="form-control mb-2" placeholder="Location" aria-label="Location">
+            <input type="url" id="txtLinkedIn" class="form-control mb-2" placeholder="LinkedIn URL" aria-label="LinkedIn URL">
+            <input type="url" id="txtGitHub" class="form-control mb-2" placeholder="GitHub URL" aria-label="GitHub URL">
+            <input type="url" id="txtWebsite" class="form-control mb-2" placeholder="Website URL" aria-label="Website URL">
+            <button class="btn btn-success" id="btnSaveProfile">Save Profile</button>
+        </div>
+        <p id="pProfileStatus" class="text-muted" aria-live="polite"></p>
     </div>
 
     <!-- Jobs -->

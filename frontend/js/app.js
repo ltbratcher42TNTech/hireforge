@@ -1,4 +1,5 @@
-const strBaseURL = 'http://localhost:8000'
+//const strBaseURL = 'http://localhost:8000'
+const strBaseURL = ''
 
 // ===================================================
 // Navigation of the site (basically open forms)
@@ -6,6 +7,7 @@ const strBaseURL = 'http://localhost:8000'
 
 const showSection = (strSectionName) => {
     document.getElementById('dashboardSection').style.display = 'none'
+    document.getElementById('profileSection').style.display = 'none'
     document.getElementById('jobsSection').style.display = 'none'
     document.getElementById('skillsSection').style.display = 'none'
     document.getElementById('certsSection').style.display = 'none'
@@ -16,6 +18,11 @@ const showSection = (strSectionName) => {
 
 document.querySelector('#btnNavDashboard').addEventListener('click', () => {
     showSection('dashboard')
+})
+
+document.querySelector('#btnNavProfile').addEventListener('click', () => {
+    showSection('profile')
+    loadProfile()
 })
 
 document.querySelector('#btnNavJobs').addEventListener('click', () => {
@@ -40,6 +47,112 @@ document.querySelector('#btnNavAwards').addEventListener('click', () => {
 
 document.querySelector('#btnNavResume').addEventListener('click', () => {
     showSection('resume')
+})
+
+// ===================================================
+// Profile
+// ===================================================
+
+let strCurrentProfileID = ''
+
+const loadProfile = async () => {
+    const objResponse = await fetch(`${strBaseURL}/api/profile`)
+
+    if (objResponse.status === 404) {
+        clearProfileForm()
+        document.querySelector('#pProfileStatus').innerText = 'No profile saved yet.'
+        return
+    }
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200) {
+        alert(objData.message)
+        return
+    }
+
+    const objProfile = objData.profile
+    strCurrentProfileID = objProfile.ProfileID
+
+    document.querySelector('#txtFullName').value = objProfile.FullName || ''
+    document.querySelector('#txtEmail').value = objProfile.Email || ''
+    document.querySelector('#txtPhone').value = objProfile.Phone || ''
+    document.querySelector('#txtLocation').value = objProfile.Location || ''
+    document.querySelector('#txtLinkedIn').value = objProfile.LinkedIn || ''
+    document.querySelector('#txtGitHub').value = objProfile.GitHub || ''
+    document.querySelector('#txtWebsite').value = objProfile.Website || ''
+    document.querySelector('#pProfileStatus').innerText = 'Profile loaded.'
+}
+
+const clearProfileForm = () => {
+    strCurrentProfileID = ''
+    document.querySelector('#txtFullName').value = ''
+    document.querySelector('#txtEmail').value = ''
+    document.querySelector('#txtPhone').value = ''
+    document.querySelector('#txtLocation').value = ''
+    document.querySelector('#txtLinkedIn').value = ''
+    document.querySelector('#txtGitHub').value = ''
+    document.querySelector('#txtWebsite').value = ''
+}
+
+document.querySelector('#btnSaveProfile').addEventListener('click', async () => {
+    let strFullName = document.querySelector('#txtFullName').value.trim()
+    let strEmail = document.querySelector('#txtEmail').value.trim()
+    let strPhone = document.querySelector('#txtPhone').value.trim()
+    let strLocation = document.querySelector('#txtLocation').value.trim()
+    let strLinkedIn = document.querySelector('#txtLinkedIn').value.trim()
+    let strGitHub = document.querySelector('#txtGitHub').value.trim()
+    let strWebsite = document.querySelector('#txtWebsite').value.trim()
+
+    let blnError = false
+    let strMessage = ''
+
+    if (!strFullName) {
+        blnError = true
+        strMessage += '<p>Full name is required</p>'
+    }
+
+    if (!strEmail) {
+        blnError = true
+        strMessage += '<p>Email is required</p>'
+    }
+
+    if (blnError) {
+        alert(strMessage)
+        return
+    }
+
+    let strURL = `${strBaseURL}/api/profile`
+    let strMethod = 'POST'
+
+    if (strCurrentProfileID) {
+        strURL = `${strBaseURL}/api/profile/${strCurrentProfileID}`
+        strMethod = 'PUT'
+    }
+
+    const objResponse = await fetch(strURL, {
+        method: strMethod,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            fullName: strFullName,
+            email: strEmail,
+            phone: strPhone,
+            location: strLocation,
+            linkedIn: strLinkedIn,
+            gitHub: strGitHub,
+            website: strWebsite
+        })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200 && objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    strCurrentProfileID = objData.profile.ProfileID
+    document.querySelector('#pProfileStatus').innerText = 'Profile saved successfully.'
 })
 
 // ===================================================
