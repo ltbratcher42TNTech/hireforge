@@ -146,8 +146,48 @@
     <!-- Resume -->
     <div id="resumeSection" style="display:none;">
         <h3>Resume Preview</h3>
-        <div class="card p-3">
-            <p>Your resume will appear here.</p>
+        <div class="row g-3">
+            <div class="col-lg-5">
+                <div class="card p-3 mb-3">
+                    <h5>Select Profile Fields</h5>
+                    <div id="divResumeProfileFields"></div>
+                </div>
+
+                <div class="card p-3 mb-3">
+                    <h5>Select Jobs + Bullet Points</h5>
+                    <div id="divResumeJobs"></div>
+                </div>
+
+                <div class="card p-3 mb-3">
+                    <h5>Select Skills</h5>
+                    <div id="divResumeSkills"></div>
+                </div>
+
+                <div class="card p-3 mb-3">
+                    <h5>Select Certifications</h5>
+                    <div id="divResumeCerts"></div>
+                </div>
+
+                <div class="card p-3 mb-3">
+                    <h5>Select Awards</h5>
+                    <div id="divResumeAwards"></div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" id="btnGenerateResume">Generate Resume</button>
+                    <button class="btn btn-outline-primary" id="btnAiPolishResume">AI Polish Bullets</button>
+                    <button class="btn btn-secondary" id="btnPrintResume">Print</button>
+                </div>
+                <p id="pResumeStatus" class="text-muted mt-2" aria-live="polite"></p>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card p-3">
+                    <div id="divResumePreview" class="resume-preview">
+                        <p>Your resume will appear here.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

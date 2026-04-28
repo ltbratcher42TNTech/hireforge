@@ -1,4 +1,3 @@
-document.addEventListener('DOMContentLoaded', function() {
 
 //const strBaseURL = 'http://localhost:8000'
 const strBaseURL = ''
@@ -50,6 +49,7 @@ document.querySelector('#btnNavAwards').addEventListener('click', () => {
 
 document.querySelector('#btnNavResume').addEventListener('click', () => {
     showSection('resume')
+    loadResumeBuilderData()
 })
 
 // ===================================================
@@ -59,6 +59,16 @@ document.querySelector('#btnNavResume').addEventListener('click', () => {
 let strCurrentProfileID = ''
 let strCurrentJobTitle = ''
 let strCurrentJobCompany = ''
+
+const objResumeDataCache = {
+    objProfile: null,
+    arrJobs: [],
+    arrCategories: [],
+    arrSkills: [],
+    arrCerts: [],
+    arrAwards: [],
+    objDetailsByJobID: {}
+}
 
 const strGeminiKeyStorageName = 'strGeminiApiKey'
 
@@ -777,4 +787,317 @@ document.querySelector('#btnClearGeminiKey').addEventListener('click', function(
     document.querySelector('#txtGeminiApiKey').value = ''
     document.querySelector('#pGeminiKeyStatus').innerText = 'Saved Gemini key cleared.'
 })
+
+// ===================================================================
+// Resume Builder (This part was almost entirely AI generated)
+// ===================================================================
+
+// AI assisted: loads all resume-related source data so users can select what to include.
+const loadResumeBuilderData = async () => {
+    document.querySelector('#pResumeStatus').innerText = 'Loading resume data...'
+
+    try {
+        const objProfileResponse = await fetch(`${strBaseURL}/api/profile`)
+        if (objProfileResponse.status === 200) {
+            const objProfileData = await objProfileResponse.json()
+            objResumeDataCache.objProfile = objProfileData.profile || null
+        } else {
+            objResumeDataCache.objProfile = null
+        }
+
+        const objJobsResponse = await fetch(`${strBaseURL}/api/jobs`)
+        const objJobsData = await objJobsResponse.json()
+        objResumeDataCache.arrJobs = objJobsData.jobs || []
+
+        const objCategoryResponse = await fetch(`${strBaseURL}/api/skillcategories`)
+        const objCategoryData = await objCategoryResponse.json()
+        objResumeDataCache.arrCategories = objCategoryData.data || []
+
+        const objSkillsResponse = await fetch(`${strBaseURL}/api/skills`)
+        const objSkillsData = await objSkillsResponse.json()
+        objResumeDataCache.arrSkills = objSkillsData.data || []
+
+        const objCertResponse = await fetch(`${strBaseURL}/api/certifications`)
+        const objCertData = await objCertResponse.json()
+        objResumeDataCache.arrCerts = objCertData.data || []
+
+        const objAwardResponse = await fetch(`${strBaseURL}/api/awards`)
+        const objAwardData = await objAwardResponse.json()
+        objResumeDataCache.arrAwards = objAwardData.data || []
+
+        objResumeDataCache.objDetailsByJobID = {}
+        for (const objJob of objResumeDataCache.arrJobs) {
+            const objDetailResponse = await fetch(`${strBaseURL}/api/jobs/${objJob.JobID}/details`)
+            const objDetailData = await objDetailResponse.json()
+            objResumeDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data || []
+        }
+
+        renderResumeSelectionUI()
+        document.querySelector('#pResumeStatus').innerText = 'Resume data loaded. Select items and click Generate Resume.'
+    } catch (objError) {
+        console.error('Resume data load failed:', objError)
+        document.querySelector('#pResumeStatus').innerText = 'Failed to load resume data.'
+    }
+}
+
+const renderResumeSelectionUI = () => {
+    renderResumeProfileSelection()
+    renderResumeJobsSelection()
+    renderResumeSkillsSelection()
+    renderResumeCertSelection()
+    renderResumeAwardSelection()
+}
+
+const renderResumeProfileSelection = () => {
+    const divProfileFields = document.querySelector('#divResumeProfileFields')
+    const objProfile = objResumeDataCache.objProfile
+
+    if (!objProfile) {
+        divProfileFields.innerHTML = '<p class="text-muted mb-0">No profile data found.</p>'
+        return
+    }
+
+    const arrFields = [
+        { strField: 'FullName', strLabel: 'Full Name' },
+        { strField: 'Email', strLabel: 'Email' },
+        { strField: 'Phone', strLabel: 'Phone' },
+        { strField: 'Location', strLabel: 'Location' },
+        { strField: 'LinkedIn', strLabel: 'LinkedIn' },
+        { strField: 'GitHub', strLabel: 'GitHub' },
+        { strField: 'Website', strLabel: 'Website' }
+    ]
+
+    divProfileFields.innerHTML = arrFields.map((objField) => {
+        const strValue = objProfile[objField.strField] || ''
+        return `
+            <div class="form-check">
+                <input class="form-check-input chkResumeProfileField" type="checkbox" id="chkProfile${objField.strField}" data-field="${objField.strField}" ${strValue ? 'checked' : ''} aria-label="${objField.strLabel}">
+                <label class="form-check-label" for="chkProfile${objField.strField}">
+                    ${objField.strLabel}${strValue ? '' : ' (empty)'}
+                </label>
+            </div>
+        `
+    }).join('')
+}
+
+const renderResumeJobsSelection = () => {
+    const divJobs = document.querySelector('#divResumeJobs')
+    const arrJobs = objResumeDataCache.arrJobs
+
+    if (!arrJobs.length) {
+        divJobs.innerHTML = '<p class="text-muted mb-0">No jobs found.</p>'
+        return
+    }
+
+    let strJobsHTML = ''
+    arrJobs.forEach((objJob) => {
+        const arrDetails = objResumeDataCache.objDetailsByJobID[objJob.JobID] || []
+        strJobsHTML += `
+            <div class="border rounded p-2 mb-2">
+                <div class="form-check mb-2">
+                    <input class="form-check-input chkResumeJob" type="checkbox" id="chkJob${objJob.JobID}" data-job-id="${objJob.JobID}" checked aria-label="Select job ${objJob.Title}">
+                    <label class="form-check-label fw-bold" for="chkJob${objJob.JobID}">
+                        ${objJob.Title} — ${objJob.Company}
+                    </label>
+                </div>
+                ${arrDetails.map((objDetail) => `
+                    <div class="form-check ms-3">
+                        <input class="form-check-input chkResumeDetail" type="checkbox" id="chkDetail${objDetail.DetailID}" data-job-id="${objJob.JobID}" data-detail-id="${objDetail.DetailID}" checked aria-label="Select detail ${objDetail.Detail}">
+                        <label class="form-check-label" for="chkDetail${objDetail.DetailID}">
+                            ${objDetail.Detail}
+                        </label>
+                    </div>
+                `).join('')}
+            </div>
+        `
+    })
+
+    divJobs.innerHTML = strJobsHTML
+}
+
+const renderResumeSkillsSelection = () => {
+    const divSkills = document.querySelector('#divResumeSkills')
+    const arrCategories = objResumeDataCache.arrCategories
+    const arrSkills = objResumeDataCache.arrSkills
+
+    if (!arrSkills.length) {
+        divSkills.innerHTML = '<p class="text-muted mb-0">No skills found.</p>'
+        return
+    }
+
+    let strHTML = ''
+    arrCategories.forEach((objCategory) => {
+        const arrCategorySkills = arrSkills.filter((objSkill) => objSkill.CategoryID === objCategory.CategoryID)
+        if (!arrCategorySkills.length) return
+
+        strHTML += `<h6 class="mt-2">${objCategory.Name}</h6>`
+        strHTML += arrCategorySkills.map((objSkill) => `
+            <div class="form-check">
+                <input class="form-check-input chkResumeSkill" type="checkbox" id="chkSkill${objSkill.SkillID}" data-skill-id="${objSkill.SkillID}" checked aria-label="Select skill ${objSkill.Name}">
+                <label class="form-check-label" for="chkSkill${objSkill.SkillID}">${objSkill.Name}</label>
+            </div>
+        `).join('')
+    })
+
+    divSkills.innerHTML = strHTML
+}
+
+const renderResumeCertSelection = () => {
+    const divCerts = document.querySelector('#divResumeCerts')
+    const arrCerts = objResumeDataCache.arrCerts
+
+    if (!arrCerts.length) {
+        divCerts.innerHTML = '<p class="text-muted mb-0">No certifications found.</p>'
+        return
+    }
+
+    divCerts.innerHTML = arrCerts.map((objCert) => `
+        <div class="form-check">
+            <input class="form-check-input chkResumeCert" type="checkbox" id="chkCert${objCert.CertID}" data-cert-id="${objCert.CertID}" checked aria-label="Select certification ${objCert.Name}">
+            <label class="form-check-label" for="chkCert${objCert.CertID}">
+                ${objCert.Name} — ${objCert.Issuer}
+            </label>
+        </div>
+    `).join('')
+}
+
+const renderResumeAwardSelection = () => {
+    const divAwards = document.querySelector('#divResumeAwards')
+    const arrAwards = objResumeDataCache.arrAwards
+
+    if (!arrAwards.length) {
+        divAwards.innerHTML = '<p class="text-muted mb-0">No awards found.</p>'
+        return
+    }
+
+    divAwards.innerHTML = arrAwards.map((objAward) => `
+        <div class="form-check">
+            <input class="form-check-input chkResumeAward" type="checkbox" id="chkAward${objAward.AwardID}" data-award-id="${objAward.AwardID}" checked aria-label="Select award ${objAward.Name}">
+            <label class="form-check-label" for="chkAward${objAward.AwardID}">
+                ${objAward.Name} — ${objAward.Issuer}
+            </label>
+        </div>
+    `).join('')
+}
+
+const generateResumePreview = () => {
+    const objProfile = objResumeDataCache.objProfile
+    const arrSelectedProfileFields = Array.from(document.querySelectorAll('.chkResumeProfileField:checked')).map((objElement) => objElement.dataset.field)
+    const arrSelectedJobs = Array.from(document.querySelectorAll('.chkResumeJob:checked')).map((objElement) => objElement.dataset.jobId)
+    const arrSelectedDetailIDs = Array.from(document.querySelectorAll('.chkResumeDetail:checked')).map((objElement) => objElement.dataset.detailId)
+    const arrSelectedSkillIDs = Array.from(document.querySelectorAll('.chkResumeSkill:checked')).map((objElement) => objElement.dataset.skillId)
+    const arrSelectedCertIDs = Array.from(document.querySelectorAll('.chkResumeCert:checked')).map((objElement) => objElement.dataset.certId)
+    const arrSelectedAwardIDs = Array.from(document.querySelectorAll('.chkResumeAward:checked')).map((objElement) => objElement.dataset.awardId)
+
+    const arrSelectedSkills = objResumeDataCache.arrSkills.filter((objSkill) => arrSelectedSkillIDs.includes(objSkill.SkillID))
+    const arrSelectedCerts = objResumeDataCache.arrCerts.filter((objCert) => arrSelectedCertIDs.includes(objCert.CertID))
+    const arrSelectedAwards = objResumeDataCache.arrAwards.filter((objAward) => arrSelectedAwardIDs.includes(objAward.AwardID))
+
+    let strHTML = ''
+
+    if (objProfile) {
+        strHTML += '<section>'
+        if (arrSelectedProfileFields.includes('FullName') && objProfile.FullName) {
+            strHTML += `<h2>${objProfile.FullName}</h2>`
+        }
+
+        let arrContact = []
+        if (arrSelectedProfileFields.includes('Email') && objProfile.Email) arrContact.push(objProfile.Email)
+        if (arrSelectedProfileFields.includes('Phone') && objProfile.Phone) arrContact.push(objProfile.Phone)
+        if (arrSelectedProfileFields.includes('Location') && objProfile.Location) arrContact.push(objProfile.Location)
+        if (arrSelectedProfileFields.includes('LinkedIn') && objProfile.LinkedIn) arrContact.push(objProfile.LinkedIn)
+        if (arrSelectedProfileFields.includes('GitHub') && objProfile.GitHub) arrContact.push(objProfile.GitHub)
+        if (arrSelectedProfileFields.includes('Website') && objProfile.Website) arrContact.push(objProfile.Website)
+        strHTML += `<p>${arrContact.join(' | ')}</p>`
+        strHTML += '</section>'
+    }
+
+
+
+    strHTML += '<section class="resume-preview-section"><h3>Experience</h3>'
+    const arrJobs = objResumeDataCache.arrJobs.filter((objJob) => arrSelectedJobs.includes(objJob.JobID))
+    arrJobs.forEach((objJob) => {
+        const arrDetails = (objResumeDataCache.objDetailsByJobID[objJob.JobID] || []).filter((objDetail) => arrSelectedDetailIDs.includes(objDetail.DetailID))
+        strHTML += `
+            <div class="mb-2">
+                <div class="resume-job-header">
+                    <strong>${objJob.Title} — ${objJob.Company}</strong>
+                    <small>${objJob.StartDate} to ${objJob.EndDate}</small>
+                </div>
+                <ul>
+        `
+        arrDetails.forEach((objDetail) => {
+            strHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
+        })
+        strHTML += '</ul></div>'
+    })
+    strHTML += '</section>'
+
+
+
+    strHTML += '<section class="resume-preview-section"><h3>Skills</h3>'
+    objResumeDataCache.arrCategories.forEach((objCategory) => {
+        const arrCategorySkills = arrSelectedSkills.filter((objSkill) => objSkill.CategoryID === objCategory.CategoryID)
+        if (!arrCategorySkills.length) return
+        const strSkillNames = arrCategorySkills.map((objSkill) => objSkill.Name).join(', ')
+        strHTML += `<p><strong>${objCategory.Name}:</strong> ${strSkillNames}</p>`
+    })
+    strHTML += '</section>'
+
+
+
+    strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
+    arrSelectedCerts.forEach((objCert) => {
+        strHTML += `<li>${objCert.Name} — ${objCert.Issuer} (${objCert.DateEarned})</li>`
+    })
+    strHTML += '</ul></section>'
+
+    strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
+    arrSelectedAwards.forEach((objAward) => {
+        strHTML += `<li>${objAward.Name} — ${objAward.Issuer} (${objAward.DateEarned})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
+    })
+    strHTML += '</ul></section>'
+
+    document.querySelector('#divResumePreview').innerHTML = strHTML
+    document.querySelector('#pResumeStatus').innerText = 'Resume preview generated.'
+}
+
+// AI assisted: optional polish pass for generated bullet points in preview.
+const aiPolishResumeBullets = async () => {
+    const arrBulletElements = Array.from(document.querySelectorAll('.resume-bullet-item'))
+    const strGeminiApiKey = localStorage.getItem(strGeminiKeyStorageName) || ''
+
+    if (!arrBulletElements.length) {
+        alert('Generate resume first so there are bullets to polish.')
+        return
+    }
+
+    document.querySelector('#pResumeStatus').innerText = 'AI polishing selected resume bullets...'
+
+    for (const objBulletElement of arrBulletElements) {
+        const strBullet = objBulletElement.innerText.trim()
+        if (!strBullet) continue
+
+        const objResponse = await fetch(`${strBaseURL}/api/ai/improve-bullet`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                detail: strBullet,
+                geminiApiKey: strGeminiApiKey
+            })
+        })
+
+        const objData = await objResponse.json()
+        if (objResponse.status === 200 && objData.data && objData.data.improvedBullet) {
+            objBulletElement.innerText = objData.data.improvedBullet
+        }
+    }
+
+    document.querySelector('#pResumeStatus').innerText = 'AI polish complete. Please review content for accuracy.'
+}
+
+document.querySelector('#btnGenerateResume').addEventListener('click', generateResumePreview)
+document.querySelector('#btnAiPolishResume').addEventListener('click', aiPolishResumeBullets)
+document.querySelector('#btnPrintResume').addEventListener('click', () => {
+    window.print()
 })
