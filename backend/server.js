@@ -619,9 +619,9 @@ const callGemini = async (objOptions) => {
         }
     }
 
-    const strModel = "gemini-2.0-flash"
+    const strModel = "gemini-2.5-flash"
 
-    const strURL = `https://generativelanguage.googleapis.com/v1beta/models/${strModel}:generateContent?key=${encodeURIComponent(strApiKey)}`
+    const strURL = `https://generativelanguage.googleapis.com/v1beta/models/${strModel}:generateContent`
 
     console.log('Using API key:', strApiKey.substring(0, 8) + '...')
     console.log('Model:', strModel)
@@ -629,7 +629,10 @@ const callGemini = async (objOptions) => {
 
     const objResponse = await fetch(strURL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": strApiKey
+        },
         body: JSON.stringify({
             generationConfig: {
                 temperature: 0.2
@@ -668,9 +671,17 @@ const callGemini = async (objOptions) => {
         }
     }
 
+    // AI assisted: Gemini may return JSON inside markdown code fences, so strip wrappers before parsing.
+    let strJsonText = strRawText.trim()
+    const arrCodeFenceMatch = strJsonText.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)
+    if (arrCodeFenceMatch && arrCodeFenceMatch[1]) {
+        strJsonText = arrCodeFenceMatch[1].trim()
+    }
+
+
     let objData = null
     try {
-        objData = JSON.parse(strRawText)
+        objData = JSON.parse(strJsonText)
     } catch (err) {
         return {
             blnSuccess: false,

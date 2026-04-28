@@ -144,3 +144,13 @@ body {
 .resume-preview p {
     margin-bottom: 0.2rem;
 }
+
+.resume-job-header strong {
+    font-weight: 700;
+}
+
+.skill-category,
+.cert-name,
+.award-name {
+    font-weight: 700 !important;
+}
