@@ -1,3 +1,4 @@
+document.addEventListener('DOMContentLoaded', function() {
 
 //const strBaseURL = 'http://localhost:8000'
 const strBaseURL = ''
@@ -775,4 +776,5 @@ document.querySelector('#btnClearGeminiKey').addEventListener('click', function(
     localStorage.removeItem(strGeminiKeyStorageName)
     document.querySelector('#txtGeminiApiKey').value = ''
     document.querySelector('#pGeminiKeyStatus').innerText = 'Saved Gemini key cleared.'
+})
 })
