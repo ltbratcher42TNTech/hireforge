@@ -1,7 +1,5 @@
-<<<<<<< HEAD
+
 //const strBaseURL = 'http://localhost:8000'
-=======
->>>>>>> 7076cff34f570e7ba8313562737e2c5d3b3c22c9
 const strBaseURL = ''
 
 // ===================================================
@@ -26,6 +24,7 @@ document.querySelector('#btnNavDashboard').addEventListener('click', () => {
 document.querySelector('#btnNavProfile').addEventListener('click', () => {
     showSection('profile')
     loadProfile()
+    loadGeminiKeyStatus()
 })
 
 document.querySelector('#btnNavJobs').addEventListener('click', () => {
@@ -57,6 +56,31 @@ document.querySelector('#btnNavResume').addEventListener('click', () => {
 // ===================================================
 
 let strCurrentProfileID = ''
+let strCurrentJobTitle = ''
+let strCurrentJobCompany = ''
+
+const strGeminiKeyStorageName = 'strGeminiApiKey'
+
+// AI assisted here, this is basically local key manager for Gemini API key save/clear usage in browser only.
+const loadGeminiKeyStatus = async () => {
+    const strSavedGeminiKey = localStorage.getItem(strGeminiKeyStorageName) || ''
+    document.querySelector('#txtGeminiApiKey').value = strSavedGeminiKey
+
+    let strStatus = ''
+    if (strSavedGeminiKey) {
+        strStatus = 'Gemini key loaded from browser storage.'
+    } else {
+        const objResponse = await fetch(`${strBaseURL}/api/ai/config`)
+        const objData = await objResponse.json()
+        if (objResponse.status === 200 && objData.data && objData.data.hasEnvKey) {
+            strStatus = 'No local key saved. Server .env fallback key is available.'
+        } else {
+            strStatus = 'No local key saved.'
+        }
+    }
+
+    document.querySelector('#pGeminiKeyStatus').innerText = strStatus
+}
 
 const loadProfile = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/profile`)
@@ -206,7 +230,10 @@ const loadDetails = async (strJobID) => {
         divDetailList.innerHTML += `
             <div class="card p-2 mb-1">
                 - ${objDetail.Detail}
-                <span class="text-danger btnDeleteDetail" style="cursor:pointer; font-size:0.8rem;" data-id="${objDetail.DetailID}">remove</span>
+                <div class="d-flex flex-column mt-2" style="width: fit-content;">
+                    <span class="text-primary btnImproveDetail" style="cursor:pointer; font-size:0.8rem;" data-id="${objDetail.DetailID}" data-detail="${objDetail.Detail}">ai improve</span>
+                    <span class="text-danger btnDeleteDetail" style="cursor:pointer; font-size:0.8rem;" data-id="${objDetail.DetailID}">remove</span>
+                </div>
             </div>
         `
     })
@@ -214,6 +241,41 @@ const loadDetails = async (strJobID) => {
 
 // Allows you to delete the details
 document.querySelector('#divDetailList').addEventListener('click', async function(objEvent) {
+    if (objEvent.target.classList.contains('btnImproveDetail')) {
+        const strOriginalDetail = objEvent.target.dataset.detail ? objEvent.target.dataset.detail.trim() : ''
+        const strGeminiApiKey = localStorage.getItem(strGeminiKeyStorageName) || ''
+
+        if (!strOriginalDetail) {
+            alert('Bullet detail is required for AI improvement.')
+            return
+        }
+
+        document.querySelector('#pJobAiStatus').innerText = 'Improving bullet with AI...'
+
+        const objResponse = await fetch(`${strBaseURL}/api/ai/improve-bullet`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                detail: strOriginalDetail,
+                jobTitle: strCurrentJobTitle,
+                company: strCurrentJobCompany,
+                geminiApiKey: strGeminiApiKey
+            })
+        })
+
+        const objData = await objResponse.json()
+        if (objResponse.status !== 200) {
+            document.querySelector('#pJobAiStatus').innerText = ''
+            alert(objData.message || 'AI improvement failed.')
+            return
+        }
+
+        document.querySelector('#txtDetail').value = objData.data.improvedBullet
+        document.querySelector('#pJobAiStatus').innerText = 'Improved bullet added to input box. Review, then click "Add Bullet" to save.'
+        return
+    }
+
+    
     if (objEvent.target.classList.contains('btnDeleteDetail')) {
         const strDetailID = objEvent.target.dataset.id
 
@@ -261,6 +323,8 @@ document.querySelector('#divJobs').addEventListener('click', async function(objE
         const strCompany = divJob.dataset.company
 
         strCurrentJobID = strJobID
+        strCurrentJobTitle = strTitle
+        strCurrentJobCompany = strCompany
 
         document.querySelector('#txtSelectedJob').innerText = `${strTitle} — ${strCompany}`
         document.querySelector('#divJobs').style.display = 'none'
@@ -273,6 +337,7 @@ document.querySelector('#divJobs').addEventListener('click', async function(objE
 document.querySelector('#btnBackToJobs').addEventListener('click', function() {
     document.querySelector('#divJobDetailsView').style.display = 'none'
     document.querySelector('#divJobs').style.display = 'block'
+    document.querySelector('#pJobAiStatus').innerText = ''
     loadJobs()
 })
 
@@ -690,4 +755,24 @@ document.querySelector('#btnAddAward').addEventListener('click', async function(
     document.querySelector('#txtAwardDescription').value = ''
 
     loadAwards()
+})
+
+
+// AI assisted here. Gemini key save/clear controls for profile AI settings.
+document.querySelector('#btnSaveGeminiKey').addEventListener('click', function() {
+    const strGeminiApiKey = document.querySelector('#txtGeminiApiKey').value.trim()
+
+    if (!strGeminiApiKey) {
+        alert('Please enter a Gemini API key to save.')
+        return
+    }
+
+    localStorage.setItem(strGeminiKeyStorageName, strGeminiApiKey)
+    document.querySelector('#pGeminiKeyStatus').innerText = 'Gemini key saved in browser storage.'
+})
+
+document.querySelector('#btnClearGeminiKey').addEventListener('click', function() {
+    localStorage.removeItem(strGeminiKeyStorageName)
+    document.querySelector('#txtGeminiApiKey').value = ''
+    document.querySelector('#pGeminiKeyStatus').innerText = 'Saved Gemini key cleared.'
 })

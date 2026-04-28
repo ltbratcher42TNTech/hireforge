@@ -56,6 +56,11 @@
             <input type="url" id="txtLinkedIn" class="form-control mb-2" placeholder="LinkedIn URL" aria-label="LinkedIn URL">
             <input type="url" id="txtGitHub" class="form-control mb-2" placeholder="GitHub URL" aria-label="GitHub URL">
             <input type="url" id="txtWebsite" class="form-control mb-2" placeholder="Website URL" aria-label="Website URL">
+            <hr>
+            <input type="text" id="txtGeminiApiKey" class="form-control mb-2" placeholder="Gemini API Key" aria-label="Gemini API Key">
+            <p id="pGeminiKeyStatus" class="text-muted" aria-live="polite"></p>
+            <button class="btn btn-secondary me-2" id="btnSaveGeminiKey">Save Gemini Key</button>
+            <button class="btn btn-outline-danger" id="btnClearGeminiKey">Clear Gemini Key</button>
             <button class="btn btn-success" id="btnSaveProfile">Save Profile</button>
         </div>
         <p id="pProfileStatus" class="text-muted" aria-live="polite"></p>
@@ -77,6 +82,7 @@
             <button class="btn btn-secondary mb-3" id="btnBackToJobs">Back</button>
             <h4 id="txtSelectedJob"></h4>
             <div id="divDetailList" class="mb-3"></div>
+            <p id="pJobAiStatus" class="text-muted" aria-live="polite"></p>
             <div class="card p-3">
                 <input type="text" id="txtDetail" class="form-control mb-2" placeholder="Add a bullet point" aria-label="Job detail">
                 <button class="btn btn-success" id="btnAddDetail">Add Bullet</button>

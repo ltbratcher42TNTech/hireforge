@@ -42,10 +42,8 @@ const PORT = 8000
 // Middleware stuff
 app.use(cors())
 app.use(express.json())
-<<<<<<< HEAD
+
 // Ai used for this
-=======
->>>>>>> 7076cff34f570e7ba8313562737e2c5d3b3c22c9
 app.use(express.static(path.join(__dirname, '..', 'frontend')))
 
 //Database connection
@@ -67,7 +65,7 @@ app.get('/', (req,res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'))
 })
 
-<<<<<<< HEAD
+
 // ===================================================================
 // PROFILE ROUTES BELOW
 // ===================================================================
@@ -188,8 +186,6 @@ app.put('/api/profile/:id', (req,res,next) => {
     })
 })
 
-=======
->>>>>>> 7076cff34f570e7ba8313562737e2c5d3b3c22c9
 // ===================================================================
 // JOB ROUTES BELOW
 // ===================================================================
@@ -605,6 +601,167 @@ app.delete('/api/awards/:id', (req,res,next) => {
     })
 })
 
+// ===================================================================
+// AI ROUTES BELOW
+// ===================================================================
+
+// AI assisted: helper used to call Gemini with a user key first, then env fallback key.
+const callGemini = async (objOptions) => {
+    const strUserApiKey = objOptions.strUserApiKey ? objOptions.strUserApiKey.trim() : ""
+    const strApiKey = strUserApiKey || (process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : "")
+
+    if (!strApiKey) {
+        return {
+            blnSuccess: false,
+            intStatus: 400,
+            strErrorCode: "MISSING_API_KEY",
+            strMessage: "Gemini API key is required. Save a key in Profile or set GEMINI_API_KEY in backend/.env."
+        }
+    }
+
+    const strModel = "gemini-2.0-flash"
+
+    const strURL = `https://generativelanguage.googleapis.com/v1beta/models/${strModel}:generateContent?key=${encodeURIComponent(strApiKey)}`
+
+    console.log('Using API key:', strApiKey.substring(0, 8) + '...')
+    console.log('Model:', strModel)
+    console.log('URL:', strURL)
+
+    const objResponse = await fetch(strURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            generationConfig: {
+                temperature: 0.2
+            },
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: objOptions.strPrompt }]
+                }
+            ]
+        })
+    })
+
+    const objPayload = await objResponse.json()
+
+    console.log("=== GEMINI RESPONSE ===")
+    console.log("Status:", objResponse.status)
+    console.log("Body:", JSON.stringify(objPayload, null, 2))
+
+    if (!objResponse.ok) {
+        return {
+            blnSuccess: false,
+            intStatus: objResponse.status,
+            strErrorCode: "GEMINI_REQUEST_FAILED",
+            strMessage: objPayload.error && objPayload.error.message ? objPayload.error.message : "Gemini request failed."
+        }
+    }
+
+    const strRawText = objPayload?.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    if (!strRawText) {
+        return {
+            blnSuccess: false,
+            intStatus: 502,
+            strErrorCode: "EMPTY_AI_RESPONSE",
+            strMessage: "Gemini returned an empty response."
+        }
+    }
+
+    let objData = null
+    try {
+        objData = JSON.parse(strRawText)
+    } catch (err) {
+        return {
+            blnSuccess: false,
+            intStatus: 502,
+            strErrorCode: "INVALID_AI_RESPONSE",
+            strMessage: "Gemini returned invalid JSON."
+        }
+    }
+
+    return {
+        blnSuccess: true,
+        intStatus: 200,
+        objData: objData
+    }
+}
+
+app.get('/api/ai/config', (req,res,next) => {
+    return res.status(200).json({
+        message: "AI config retrieved successfully",
+        data: {
+            hasEnvKey: !!(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim())
+        }
+    })
+})
+
+// AI assisted: first Gemini endpoint for polishing existing bullet details.
+app.post('/api/ai/improve-bullet', async (req,res,next) => {
+    const strDetail = req.body.detail ? req.body.detail.trim() : ""
+    const strJobTitle = req.body.jobTitle ? req.body.jobTitle.trim() : ""
+    const strCompany = req.body.company ? req.body.company.trim() : ""
+    const strGeminiApiKey = req.body.geminiApiKey ? req.body.geminiApiKey.trim() : ""
+
+    if (!strDetail) {
+        return res.status(400).json({
+            message: "Detail is required.",
+            error: { code: "VALIDATION_ERROR" }
+        })
+    }
+
+    const strPrompt = `
+You are improving one resume bullet.
+Rules:
+1) Do not fabricate achievements, numbers, technologies, or responsibilities.
+2) Keep claims grounded only in the provided text.
+3) Preserve the original meaning.
+4) Keep output concise and resume-ready.
+5) Return ONLY JSON with shape: {"improvedBullet":"...","reasoning":"..."}.
+
+Input bullet: "${strDetail}"
+Job title context: "${strJobTitle}"
+Company context: "${strCompany}"
+`
+
+    try {
+        const objAiResult = await callGemini({
+            strUserApiKey: strGeminiApiKey,
+            strPrompt: strPrompt
+        })
+
+        if (!objAiResult.blnSuccess) {
+            return res.status(objAiResult.intStatus).json({
+                message: objAiResult.strMessage,
+                error: { code: objAiResult.strErrorCode }
+            })
+        }
+
+        const strImprovedBullet = objAiResult.objData.improvedBullet ? objAiResult.objData.improvedBullet.trim() : ""
+
+        if (!strImprovedBullet) {
+            return res.status(502).json({
+                message: "AI response did not include an improved bullet.",
+                error: { code: "INVALID_AI_RESPONSE" }
+            })
+        }
+
+        return res.status(200).json({
+            message: "Bullet improved successfully",
+            data: {
+                originalBullet: strDetail,
+                improvedBullet: strImprovedBullet,
+                reasoning: objAiResult.objData.reasoning ? objAiResult.objData.reasoning : ""
+            }
+        })
+    } catch (err) {
+        console.error("Error improving bullet with AI:", err.message)
+        return res.status(500).json({
+            message: "Unexpected AI server error.",
+            error: { code: "AI_SERVER_ERROR" }
+        })
+    }
+})
 
 
 // Start server
