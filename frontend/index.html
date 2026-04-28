@@ -7,7 +7,7 @@
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="assets/bootstrap.min.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="assets/lux.css"
+    <link rel="stylesheet" href="assets/lux.css">
 </head>
 <body>
 <div class="container mt-4">
@@ -58,24 +58,13 @@
             <input type="url" id="txtGitHub" class="form-control mb-2" placeholder="GitHub URL" aria-label="GitHub URL">
             <input type="url" id="txtWebsite" class="form-control mb-2" placeholder="Website URL" aria-label="Website URL">
             <hr>
-            <input type="text" id="txtGeminiApiKey" class="form-control mb-2" placeholder="Gemini API Key" aria-label="Gemini API Key">
+            <input type="password" id="txtGeminiApiKey" class="form-control mb-2" placeholder="Gemini API Key" aria-label="Gemini API Key">
             <p id="pGeminiKeyStatus" class="text-muted" aria-live="polite"></p>
             <button class="btn btn-secondary me-2" id="btnSaveGeminiKey">Save Gemini Key</button>
             <button class="btn btn-outline-danger" id="btnClearGeminiKey">Clear Gemini Key</button>
             <button class="btn btn-success" id="btnSaveProfile">Save Profile</button>
         </div>
         <p id="pProfileStatus" class="text-muted" aria-live="polite"></p>
-
-        <h4 class="mt-4">AI Settings</h4>
-        <div class="card p-3 mb-3">
-            <input type="password" id="txtGeminiApiKey" class="form-control mb-2" placeholder="Gemini API Key (optional)" aria-label="Gemini API Key">
-            <div class="d-flex gap-2">
-                <button class="btn btn-success" id="btnSaveGeminiKey">Save Key</button>
-                <button class="btn btn-secondary" id="btnClearGeminiKey">Clear Key</button>
-            </div>
-            <small class="text-muted mt-2">Your key is saved only in this browser for now.</small>
-        </div>
-        <p id="pGeminiKeyStatus" class="text-muted" aria-live="polite"></p>
     </div>
 
     <!-- Jobs -->
