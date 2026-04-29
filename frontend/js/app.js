@@ -1052,6 +1052,8 @@ const generateResumePreview = () => {
     })
     strHTML += '</ul></section>'
 
+
+    
     strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
     arrSelectedAwards.forEach((objAward) => {
         strHTML += `<li>${objAward.Name} — ${objAward.Issuer} (${objAward.DateEarned})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
