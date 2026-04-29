@@ -148,9 +148,3 @@ body {
 .resume-job-header strong {
     font-weight: 700;
 }
-
-.skill-category,
-.cert-name,
-.award-name {
-    font-weight: 700 !important;
-}
