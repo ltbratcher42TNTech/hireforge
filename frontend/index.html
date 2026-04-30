@@ -9,186 +9,211 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="assets/lux.css">
 </head>
-<body>
-    <div class="container mt-4">
-        <h1 class="mb-4">Resume Builder</h1>
-    <main>
-        <!-- Navigation -->
-        <nav aria-label="Main navigation" class="mb-4">
-            <button class="btn btn-primary me-2" id="btnNavDashboard">Dashboard</button>
-            <button class="btn btn-primary me-2" id="btnNavProfile">Profile</button>
-            <button class="btn btn-primary me-2" id="btnNavJobs">Jobs</button>
-            <button class="btn btn-primary me-2" id="btnNavSkills">Skills</button>
-            <button class="btn btn-primary me-2" id="btnNavCerts">Certifications</button>
-            <button class="btn btn-primary me-2" id="btnNavAwards">Awards</button>
-            <button class="btn btn-primary me-2" id="btnNavResume">Resume</button>
-        </nav>
-    </main>
-        
+<body class="d-flex flex-column min-vh-100">
+    <div class="flex-grow-1">
+        <div class="container mt-4">
+            <h1 class="mb-4">Resume Builder</h1>
+        <main>
+            <!-- Navigation -->
+            <nav aria-label="Main navigation" class="mb-4">
+                <button class="btn btn-primary me-2" id="btnNavDashboard">Dashboard</button>
+                <button class="btn btn-primary me-2" id="btnNavProfile">Profile</button>
+                <button class="btn btn-primary me-2" id="btnNavJobs">Jobs</button>
+                <button class="btn btn-primary me-2" id="btnNavSkills">Skills</button>
+                <button class="btn btn-primary me-2" id="btnNavCerts">Certifications</button>
+                <button class="btn btn-primary me-2" id="btnNavAwards">Awards</button>
+                <button class="btn btn-primary me-2" id="btnNavResume">Resume</button>
+            </nav>
+        </main>
 
-    <!-- Ideas
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Resume Builder</h1>
-        <div>
-            <button class="btn btn-outline-primary me-2" id="btnNavDashboard">Dashboard</button>
-            <button class="btn btn-outline-primary me-2" id="btnNavJobs">Jobs</button>
-            <button class="btn btn-outline-primary me-2" id="btnNavSkills">Skills</button>
-            <button class="btn btn-outline-primary me-2" id="btnNavCerts">Certifications</button>
-            <button class="btn btn-outline-primary me-2" id="btnNavAwards">Awards</button>
-            <button class="btn btn-primary" id="btnNavResume">Resume</button>
-        </div>
-
-    -->
-
-        <!-- Dashboard -->
-        <div id="dashboardSection">
-            <h2>Dashboard</h3>
-            <p>Welcome! Start building your resume.</p>
-        </div>
-
-        <!-- Used codex to implement this, simply to see how it would do with little context -->
-        <!-- Profile -->
-        <div id="profileSection" style="display:none;">
-            <h3>Profile</h3>
-            <div class="card p-3 mb-3">
-                <input type="text" id="txtFullName" class="form-control mb-2" placeholder="Full Name" aria-label="Full Name">
-                <input type="email" id="txtEmail" class="form-control mb-2" placeholder="Email" aria-label="Email">
-                <input type="tel" id="txtPhone" class="form-control mb-2" placeholder="Phone" aria-label="Phone">
-                <input type="text" id="txtLocation" class="form-control mb-2" placeholder="Location" aria-label="Location">
-                <input type="url" id="txtLinkedIn" class="form-control mb-2" placeholder="LinkedIn URL" aria-label="LinkedIn URL">
-                <input type="url" id="txtGitHub" class="form-control mb-2" placeholder="GitHub URL" aria-label="GitHub URL">
-                <input type="url" id="txtWebsite" class="form-control mb-2" placeholder="Website URL" aria-label="Website URL">
-                <hr>
-                <input type="password" id="txtGeminiApiKey" class="form-control mb-2" placeholder="Gemini API Key" aria-label="Gemini API Key">
-                <p id="pGeminiKeyStatus" class="text-muted" aria-live="polite"></p>
-                <button class="btn btn-secondary me-2" id="btnSaveGeminiKey">Save Gemini Key</button>
-                <button class="btn btn-outline-danger" id="btnClearGeminiKey">Clear Gemini Key</button>
-                <button class="btn btn-success" id="btnSaveProfile">Save Profile</button>
+            <!-- Dashboard -->
+            <div id="dashboardSection">
+                <h2>Dashboard</h3>
+                <p>Welcome! Start building your resume.</p>
             </div>
-            <p id="pProfileStatus" class="text-muted" aria-live="polite"></p>
-        </div>
 
-        <!-- Jobs -->
-        <div id="jobsSection" style="display:none;">
-            <h3>Jobs</h3>
-            <div class="card p-3 mb-3">
-                <input type="text" id="txtTitle" class="form-control mb-2" placeholder="Job Title" aria-label="Job Title">
-                <input type="text" id="txtCompany" class="form-control mb-2" placeholder="Company" aria-label="Company">
-                <input type="date" id="txtStartDate" class="form-control mb-2" aria-label="Start Date">
-                <input type="date" id="txtEndDate" class="form-control mb-2" aria-label="End Date">
-                <button class="btn btn-success" id="btnAddJob">Add Job</button>
-            </div>
-            <div id="divJobs"></div>
-            <!-- Job Details View -->
-            <div id="divJobDetailsView" style="display:none;">
-                <button class="btn btn-secondary mb-3" id="btnBackToJobs">Back</button>
-                <h4 id="txtSelectedJob"></h4>
-                <div id="divDetailList" class="mb-3"></div>
-                <p id="pJobAiStatus" class="text-muted" aria-live="polite"></p>
-                <div class="card p-3">
-                    <input type="text" id="txtDetail" class="form-control mb-2" placeholder="Add a bullet point" aria-label="Job detail">
-                    <button class="btn btn-success" id="btnAddDetail">Add Bullet</button>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Skills -->
-        <div id="skillsSection" style="display:none">
-            <h3>Skills</h3>
-            
-            <!-- Skills category view -->
-            <div id="divCategoryView">
+            <!-- Used codex to implement this, simply to see how it would do with little context -->
+            <!-- Profile -->
+            <div id="profileSection" style="display:none;">
+                <h3>Profile</h3>
                 <div class="card p-3 mb-3">
-                    <input type="text" id="txtCategoryName" class="form-control mb-2" placeholder="Category Name" aria-label="Category Name">
-                    <button class="btn btn-success" id="btnAddCategory">Add Category</button>
+                    <input type="text" id="txtFullName" class="form-control mb-2" placeholder="Full Name" aria-label="Full Name">
+                    <input type="email" id="txtEmail" class="form-control mb-2" placeholder="Email" aria-label="Email">
+                    <input type="tel" id="txtPhone" class="form-control mb-2" placeholder="Phone" aria-label="Phone">
+                    <input type="text" id="txtLocation" class="form-control mb-2" placeholder="Location" aria-label="Location">
+                    <input type="url" id="txtLinkedIn" class="form-control mb-2" placeholder="LinkedIn URL" aria-label="LinkedIn URL">
+                    <input type="url" id="txtGitHub" class="form-control mb-2" placeholder="GitHub URL" aria-label="GitHub URL">
+                    <input type="url" id="txtWebsite" class="form-control mb-2" placeholder="Website URL" aria-label="Website URL">
+                    <hr>
+                    <input type="password" id="txtGeminiApiKey" class="form-control mb-2" placeholder="Gemini API Key" aria-label="Gemini API Key">
+                    <p id="pGeminiKeyStatus" class="text-muted" aria-live="polite"></p>
+                    <button class="btn btn-secondary me-2" id="btnSaveGeminiKey">Save Gemini Key</button>
+                    <button class="btn btn-outline-danger" id="btnClearGeminiKey">Clear Gemini Key</button>
+                    <button class="btn btn-success" id="btnSaveProfile">Save Profile</button>
                 </div>
-                <div id="divCategories"></div>
+                <p id="pProfileStatus" class="text-muted" aria-live="polite"></p>
             </div>
 
-            <!-- Skills view (this will be a sort of drilldown) -->
-            <div id="divSkillView" style="display:none">
-                <button class="btn btn-secondary mb-3" id="btnBackToCategories">Back</button>  
-                <h4 id="txtSelectedCategory"></h4>
-                <div id="divSkillList" class="mb-3"></div>
-                <div class="card p-3">
-                    <input type="text" id="txtSkillName" class="form-control mb-2" placeholder="Skill Name" aria-label="Skill Name">
-                    <button class="btn btn-success" id="btnAddSkill">Add Skill</button>
+            <!-- Jobs -->
+            <div id="jobsSection" style="display:none;">
+                <h3>Jobs</h3>
+                <div class="card p-3 mb-3">
+                    <input type="text" id="txtTitle" class="form-control mb-2" placeholder="Job Title" aria-label="Job Title">
+                    <input type="text" id="txtCompany" class="form-control mb-2" placeholder="Company" aria-label="Company">
+                    <input type="date" id="txtStartDate" class="form-control mb-2" aria-label="Start Date">
+                    <input type="date" id="txtEndDate" class="form-control mb-2" aria-label="End Date">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="chkJobPresent" aria-label="Current job">
+                        <label class="form-check-label" for="chkJobPresent">Present (current job)</label>
+                    </div>
+                    <button class="btn btn-success" id="btnAddJob">Add Job</button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Certifications -->
-        <div id="certsSection" style="display:none;">
-            <h3>Certifications</h3>
-            <div class="card p-3 mb-3">
-                <input type="text" id="txtCertName" class="form-control mb-2" placeholder="Certification Name" aria-label="Certification Name">
-                <input type="text" id="txtCertIssuer" class="form-control mb-2" placeholder="Issuer" aria-label="Issuer">
-                <input type="date" id="txtCertDate" class="form-control mb-2" aria-label="Date Earned">
-                <button class="btn btn-success" id="btnAddCert">Add Certification</button>
-            </div>
-            <div id="divCerts"></div>
-        </div>
-
-        <!-- Awards -->
-        <div id="awardsSection" style="display:none;">
-            <h3>Awards</h3>
-            <div class="card p-3 mb-3">
-                <input type="text" id="txtAwardName" class="form-control mb-2" placeholder="Award Name" aria-label="Award Name">
-                <input type="text" id="txtAwardIssuer" class="form-control mb-2" placeholder="Issuer" aria-label="Issuer">
-                <input type="date" id="txtAwardDate" class="form-control mb-2" aria-label="Date Earned">
-                <textarea id="txtAwardDescription" class="form-control mb-2" placeholder="Description" aria-label="Description"></textarea>
-                <button class="btn btn-success" id="btnAddAward">Add Award</button>
-            </div>
-            <div id="divAwards"></div>
-        </div>
-
-
-        <!-- Resume -->
-        <div id="resumeSection" style="display:none;">
-            <h3>Resume Preview</h3>
-            <div class="row g-3">
-                <div class="col-lg-5">
-                    <div class="card p-3 mb-3">
-                        <h5>Select Profile Fields</h5>
-                        <div id="divResumeProfileFields"></div>
-                    </div>
-
-                    <div class="card p-3 mb-3">
-                        <h5>Select Jobs + Bullet Points</h5>
-                        <div id="divResumeJobs"></div>
-                    </div>
-
-                    <div class="card p-3 mb-3">
-                        <h5>Select Skills</h5>
-                        <div id="divResumeSkills"></div>
-                    </div>
-
-                    <div class="card p-3 mb-3">
-                        <h5>Select Certifications</h5>
-                        <div id="divResumeCerts"></div>
-                    </div>
-
-                    <div class="card p-3 mb-3">
-                        <h5>Select Awards</h5>
-                        <div id="divResumeAwards"></div>
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-primary" id="btnGenerateResume">Generate Resume</button>
-                        <button class="btn btn-outline-primary" id="btnAiPolishResume">AI Polish Bullets</button>
-                        <button class="btn btn-secondary" id="btnPrintResume">Print</button>
-                    </div>
-                    <p id="pResumeStatus" class="text-muted mt-2" aria-live="polite"></p>
-                </div>
-
-                <div class="col-lg-7">
+                <div id="divJobs"></div>
+                <!-- Job Details View -->
+                <div id="divJobDetailsView" style="display:none;">
+                    <button class="btn btn-secondary mb-3" id="btnBackToJobs">Back</button>
+                    <h4 id="txtSelectedJob"></h4>
+                    <div id="divDetailList" class="mb-3"></div>
+                    <p id="pJobAiStatus" class="text-muted" aria-live="polite"></p>
                     <div class="card p-3">
-                        <div id="divResumePreview" class="resume-preview">
-                            <p>Your resume will appear here.</p>
+                        <input type="text" id="txtDetail" class="form-control mb-2" placeholder="Add a bullet point" aria-label="Job detail">
+                        <button class="btn btn-success" id="btnAddDetail">Add Bullet</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Skills -->
+            <div id="skillsSection" style="display:none">
+                <h3>Skills</h3>
+                
+
+
+                <!-- Skills category view -->
+                <div id="divCategoryView">
+                    <div class="card p-3 mb-3">
+                        <input type="text" id="txtCategoryName" class="form-control mb-2" placeholder="Category Name" aria-label="Category Name">
+                        <button class="btn btn-success" id="btnAddCategory">Add Category</button>
+                    </div>
+                    <div id="divCategories"></div>
+                </div>
+
+
+                <!-- Skills view (this will be a sort of drilldown) -->
+                <div id="divSkillView" style="display:none">
+                    <button class="btn btn-secondary mb-3" id="btnBackToCategories">Back</button>  
+                    <h4 id="txtSelectedCategory"></h4>
+                    <div id="divSkillList" class="mb-3"></div>
+                    <div class="card p-3">
+                        <input type="text" id="txtSkillName" class="form-control mb-2" placeholder="Skill Name" aria-label="Skill Name">
+                        <button class="btn btn-success" id="btnAddSkill">Add Skill</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certifications -->
+            <div id="certsSection" style="display:none;">
+                <h3>Certifications</h3>
+                <div class="card p-3 mb-3">
+                    <input type="text" id="txtCertName" class="form-control mb-2" placeholder="Certification Name" aria-label="Certification Name">
+                    <input type="text" id="txtCertIssuer" class="form-control mb-2" placeholder="Issuer" aria-label="Issuer">
+                    <input type="date" id="txtCertDate" class="form-control mb-2" aria-label="Date Earned">
+                    <button class="btn btn-success" id="btnAddCert">Add Certification</button>
+                </div>
+                <div id="divCerts"></div>
+            </div>
+
+            <!-- Awards -->
+            <div id="awardsSection" style="display:none;">
+                <h3>Awards</h3>
+                <div class="card p-3 mb-3">
+                    <input type="text" id="txtAwardName" class="form-control mb-2" placeholder="Award Name" aria-label="Award Name">
+                    <input type="text" id="txtAwardIssuer" class="form-control mb-2" placeholder="Issuer" aria-label="Issuer">
+                    <input type="date" id="txtAwardDate" class="form-control mb-2" aria-label="Date Earned">
+                    <textarea id="txtAwardDescription" class="form-control mb-2" placeholder="Description" aria-label="Description"></textarea>
+                    <button class="btn btn-success" id="btnAddAward">Add Award</button>
+                </div>
+                <div id="divAwards"></div>
+            </div>
+
+
+            <!-- Resume -->
+            <div id="resumeSection" style="display:none;">
+                <h3>Resume Preview</h3>
+                <div class="row g-3">
+                    <div class="col-lg-5">
+                        <div class="card p-3 mb-3">
+                            <h5>Select Profile Fields</h5>
+                            <div id="divResumeProfileFields"></div>
+                        </div>
+
+                        <div class="card p-3 mb-3">
+                            <h5>Select Jobs + Bullet Points</h5>
+                            <div id="divResumeJobs"></div>
+                        </div>
+
+                        <div class="card p-3 mb-3">
+                            <h5>Select Skills</h5>
+                            <div id="divResumeSkills"></div>
+                        </div>
+
+                        <div class="card p-3 mb-3">
+                            <h5>Select Certifications</h5>
+                            <div id="divResumeCerts"></div>
+                        </div>
+
+                        <div class="card p-3 mb-3">
+                            <h5>Select Awards</h5>
+                            <div id="divResumeAwards"></div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" id="btnGenerateResume">Generate Resume</button>
+                            <button class="btn btn-outline-primary" id="btnAiPolishResume">AI Polish Bullets</button>
+                            <button class="btn btn-secondary" id="btnPrintResume">Print</button>
+                        </div>
+                        <p id="pResumeStatus" class="text-muted mt-2" aria-live="polite"></p>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="card p-3">
+                            <div id="divResumePreview" class="resume-preview">
+                                <p>Your resume will appear here.</p>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Aded a muted footer attribution entry for the libraries used, as required -->
+    <footer class="mt-4 pt-3 pb-2 border-top text-center">
+        <p class="text-muted small mb-0">Built with open-source libraries.
+            <button class="btn btn-link btn-sm p-0 align-baseline" id="btnAttributionInfo" type="button" data-bs-toggle="modal" data-bs-target="#attributionModal" aria-label="Open library attribution details">View attribution</button>
+        </p>
+    </footer>
+
+    <!-- Added a simple Bootstrap modal for visible library and framework(not sure if this part is required) attribution. -->
+    <!-- AI was used to format the modal and the footer button button above -->
+    <div class="modal fade" id="attributionModal" tabindex="-1" aria-labelledby="attributionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="attributionModalLabel">Attribution</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close attribution popup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Thank you to the following libraries & frameworks that have been used which support this project:</p>
+                    <ul class="mb-0">
+                        <li>Bootstrap 5</li>
+                        <li>Bootswatch Lux theme</li>
+                        <li>Node.js + Express</li>
+                        <li>SQLite</li>
+                    </ul>
                 </div>
             </div>
         </div>

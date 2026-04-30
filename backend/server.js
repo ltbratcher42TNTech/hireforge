@@ -197,9 +197,14 @@ app.post('/api/jobs', (req,res,next) => {
     let strCompany = req.body.company ? req.body.company.trim() : ""
     let strStartDate = req.body.startDate ? req.body.startDate.trim() : ""
     let strEndDate = req.body.endDate ? req.body.endDate.trim() : ""
+    let blnIsPresent = req.body.isPresent === true
+
+    if (blnIsPresent) {
+        strEndDate = null
+    }
     
     // Lets validate the data
-    if(!strJobID || !strTitle || !strCompany || !strStartDate || !strEndDate){
+    if(!strJobID || !strTitle || !strCompany || !strStartDate || (!strEndDate && !blnIsPresent)){
         return res.status(400).json({ message: "All fields are required" })
     }
 
