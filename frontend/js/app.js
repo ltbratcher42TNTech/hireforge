@@ -211,7 +211,7 @@ const loadJobs = async () => {
             <div class="card p-3 mb-2 btnSelectJob" style="cursor:pointer;" data-id="${objJob.JobID}" data-title="${objJob.Title}" data-company="${objJob.Company}">
                 <strong>${objJob.Title}</strong> ${objJob.Company}
                 <br>
-                <small>${objJob.StartDate} to ${objJob.EndDate}</small>
+                <small>${formatResumeDateRange(objJob.StartDate, objJob.EndDate)}</small>
                 <br>
 
                 <button 
@@ -242,7 +242,7 @@ const loadDetails = async (strJobID) => {
             <div class="card p-2 mb-1">
                 - ${objDetail.Detail}
                 <div class="d-flex flex-column mt-2" style="width: fit-content;">
-                    <span class="text-primary btnImproveDetail" style="cursor:pointer; font-size:0.8rem;" data-id="${objDetail.DetailID}" data-detail="${objDetail.Detail}">ai improve</span>
+                    <span class="text-primary btnImproveDetail btn btn-outline-dark py-0 px-1" style="cursor:pointer; font-size:0.8rem;" data-id="${objDetail.DetailID}" data-detail="${objDetail.Detail}">ai improve</span>
                     <span class="text-danger btnDeleteDetail" style="cursor:pointer; font-size:0.8rem;" data-id="${objDetail.DetailID}">remove</span>
                 </div>
             </div>
@@ -379,12 +379,29 @@ document.querySelector('#btnAddDetail').addEventListener('click', async function
     loadDetails(strCurrentJobID)
 })
 
+// AI assisted: toggles end date input when present/current job is selected.
+document.querySelector('#chkJobPresent').addEventListener('change', function() {
+    const blnIsPresent = document.querySelector('#chkJobPresent').checked
+    document.querySelector('#txtEndDate').disabled = blnIsPresent
+
+    if (blnIsPresent) {
+        document.querySelector('#txtEndDate').value = ''
+    }
+})
+
+
+
 document.querySelector('#btnAddJob').addEventListener('click', async () => {
 
     let strTitle = document.querySelector('#txtTitle').value.trim()
     let strCompany = document.querySelector('#txtCompany').value.trim()
     let strStartDate = document.querySelector('#txtStartDate').value
     let strEndDate = document.querySelector('#txtEndDate').value
+    let blnIsPresent = document.querySelector('#chkJobPresent').checked
+
+    if (blnIsPresent) {
+        strEndDate = ''
+    }
 
     let blnError = false
     let strMessage = ''
@@ -401,7 +418,7 @@ document.querySelector('#btnAddJob').addEventListener('click', async () => {
         blnError = true
         strMessage += '<p>Start date required</p>'
     }
-    if (!strEndDate) {
+    if (!strEndDate && !blnIsPresent) {
         blnError = true
         strMessage += '<p>End date required</p>'
     }
@@ -420,8 +437,8 @@ document.querySelector('#btnAddJob').addEventListener('click', async () => {
             title: strTitle,
             company: strCompany,
             startDate: strStartDate,
-            endDate: strEndDate
-        })
+            endDate: strEndDate,
+            isPresent: blnIsPresent        })
     })
 
     const objData = await objResponse.json()
@@ -436,6 +453,8 @@ document.querySelector('#btnAddJob').addEventListener('click', async () => {
     document.querySelector('#txtCompany').value = ''
     document.querySelector('#txtStartDate').value = ''
     document.querySelector('#txtEndDate').value = ''
+    document.querySelector('#chkJobPresent').checked = false
+    document.querySelector('#txtEndDate').disabled = false
 
     loadJobs() // refresh list
 })
@@ -792,6 +811,33 @@ document.querySelector('#btnClearGeminiKey').addEventListener('click', function(
 // Resume Builder (This part was almost entirely AI generated)
 // ===================================================================
 
+
+// AI assisted: helper functions to format stored ISO dates only for resume preview display.
+const formatResumeMonthYear = (strISODate, blnUseShortMonth = true) => {
+    if (!strISODate) return ''
+
+    const objDate = new Date(strISODate)
+    if (Number.isNaN(objDate.getTime())) return strISODate
+
+    const strMonth = objDate.toLocaleString('en-US', { month: blnUseShortMonth ? 'short' : 'long' })
+    const strYear = objDate.getFullYear()
+    return `${strMonth} ${strYear}`
+}
+
+// AI assisted: turns job start/end ISO strings into resume-friendly date ranges.
+const formatResumeDateRange = (strStartDate, strEndDate) => {
+    const strFormattedStartDate = formatResumeMonthYear(strStartDate, true)
+    const strFormattedEndDate = strEndDate ? formatResumeMonthYear(strEndDate, true) : 'Present'
+
+    if (!strFormattedStartDate && !strFormattedEndDate) return ''
+    if (!strFormattedStartDate) return strFormattedEndDate
+    if (!strFormattedEndDate) return strFormattedStartDate
+
+    return `${strFormattedStartDate} – ${strFormattedEndDate}`
+}
+
+
+
 // AI assisted: loads all resume-related source data so users can select what to include.
 const loadResumeBuilderData = async () => {
     document.querySelector('#pResumeStatus').innerText = 'Loading resume data...'
@@ -1022,7 +1068,7 @@ const generateResumePreview = () => {
             <div class="mb-2">
                 <div class="resume-job-header">
                     <strong>${objJob.Title} — ${objJob.Company}</strong>
-                    <small>${objJob.StartDate} to ${objJob.EndDate}</small>
+                    <small>${formatResumeDateRange(objJob.StartDate, objJob.EndDate)}</small>
                 </div>
                 <ul>
         `
@@ -1040,7 +1086,7 @@ const generateResumePreview = () => {
         const arrCategorySkills = arrSelectedSkills.filter((objSkill) => objSkill.CategoryID === objCategory.CategoryID)
         if (!arrCategorySkills.length) return
         const strSkillNames = arrCategorySkills.map((objSkill) => objSkill.Name).join(', ')
-        strHTML += `<p><strong>${objCategory.Name}:</strong> ${strSkillNames}</p>`
+        strHTML += `<p><span class="fw-bold">${objCategory.Name}:</span> ${strSkillNames}</p>`
     })
     strHTML += '</section>'
 
@@ -1048,16 +1094,14 @@ const generateResumePreview = () => {
 
     strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
     arrSelectedCerts.forEach((objCert) => {
-        strHTML += `<li>${objCert.Name} — ${objCert.Issuer} (${objCert.DateEarned})</li>`
-    })
+        strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`    })
     strHTML += '</ul></section>'
 
 
     
     strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
     arrSelectedAwards.forEach((objAward) => {
-        strHTML += `<li>${objAward.Name} — ${objAward.Issuer} (${objAward.DateEarned})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
-    })
+        strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`    })
     strHTML += '</ul></section>'
 
     document.querySelector('#divResumePreview').innerHTML = strHTML

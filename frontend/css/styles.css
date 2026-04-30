@@ -67,6 +67,21 @@ body {
 }
 
 @media print {
+
+    /* Absolutely mercilessly KILL Bootstrap flex layout for print (assassination for messing with my print)*/
+    body.d-flex {
+        display: block !important;
+    }
+
+    body.d-flex > .flex-grow-1 {
+        display: block !important;
+        flex: none !important;
+    }
+
+    .flex-grow-1 {
+        flex: none !important;
+    }
+
     /* Hide absolutely everything first */
     body > * {
         display: none !important;
@@ -115,36 +130,4 @@ body {
     h1 {
         display: none !important;
     }
-}
-
-@page {
-    margin: 0.5in;
-    size: letter;
-}
-
-.resume-preview {
-    font-family: 'Times New Roman', serif;
-    font-size: 11pt;
-    line-height: 1.4;
-    color: #000;
-    max-width: 750px;
-    margin: 0 auto;
-    padding: 1rem;
-}
-
-.resume-preview ul {
-    margin: 0.1rem 0 0.25rem 1.25rem;
-    padding: 0;
-}
-
-.resume-preview li {
-    margin-bottom: 0.1rem;
-}
-
-.resume-preview p {
-    margin-bottom: 0.2rem;
-}
-
-.resume-job-header strong {
-    font-weight: 700;
 }
