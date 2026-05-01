@@ -447,7 +447,7 @@ app.post('/api/skills', (req,res,next) => {
 // improve even further if I decide to implement it), even if it makes this query a little quirky,
 // This was created with the help of AI (I wrote most of the route and asked it to help me add filtering
 // by category)
-app.get('/api/skills', (req, res) => {
+app.get('/api/skills', (req,res,next) => {
     const strCategoryID = req.query.categoryId
     let strQuery = `SELECT * FROM tblSkills`
     let arrParams = []
@@ -682,7 +682,10 @@ const callGemini = async (objOptions) => {
     if (arrCodeFenceMatch && arrCodeFenceMatch[1]) {
         strJsonText = arrCodeFenceMatch[1].trim()
     }
-
+    
+    if (objOptions.blnRawText) {
+        return { blnSuccess: true, intStatus: 200, strText: strRawText }
+    }
 
     let objData = null
     try {
@@ -779,6 +782,90 @@ Company context: "${strCompany}"
     }
 })
 
+
+// AI assisted: builds a detailed prompt from resume data and user preferences, sends to Gemini
+app.post('/api/ai/cover-letter', async (req,res,next) => {
+    const {
+        geminiApiKey, company, role, jobDescription, tone,
+        targetLength, paragraphCount, includeAchievements,
+        companyContext, profile, jobs, skills, certifications, awards
+    } = req.body
+
+    if (!company || !role || !jobDescription) {
+        return res.status(400).json({ message: 'Company, role, and job description are required.' })
+    }
+
+    let strApplicantName = profile && profile.FullName ? profile.FullName : 'the applicant'
+
+    let strContext = ''
+
+    if (jobs && jobs.length) {
+        strContext += '\nWork Experience:\n'
+        jobs.forEach((objJob) => {
+            strContext += `- ${objJob.title} at ${objJob.company} (${objJob.dates})\n`
+            if (objJob.bullets && objJob.bullets.length) {
+                objJob.bullets.forEach((strBullet) => {
+                    strContext += `  • ${strBullet}\n`
+                })
+            }
+        })
+    }
+
+    if (skills && skills.length) {
+        strContext += `\nKey Skills: ${skills.join(', ')}\n`
+    }
+
+    if (certifications && certifications.length) {
+        strContext += `\nCertifications: ${certifications.join(', ')}\n`
+    }
+
+    if (awards && awards.length) {
+        strContext += '\nAwards & Achievements:\n'
+        awards.forEach((strAward) => {
+            strContext += `- ${strAward}\n`
+        })
+    }
+
+    console.log('cover letter payload received:')
+    console.log('jobs:', JSON.stringify(jobs, null, 2))
+    console.log('skills:', skills)
+
+    const strPrompt = `
+Write a cover letter for ${strApplicantName} applying to the role of ${role} at ${company}.
+
+Tone: ${tone}
+Target length: approximately ${targetLength} words
+Number of body paragraphs: ${paragraphCount}
+${includeAchievements ? 'Emphasize specific achievements and quantifiable results where possible.' : ''}
+${companyContext ? `Company context: ${companyContext}` : ''}
+
+Job Description:
+${jobDescription}
+
+Applicant background:
+${strContext}
+
+Write only the body of the cover letter — no subject line, no date, no address block.
+Start directly with the opening paragraph. Do not include any preamble or explanation.
+`.trim()
+
+    try {
+        const objAiResult = await callGemini({
+            strUserApiKey: geminiApiKey,
+            strPrompt: strPrompt,
+            blnRawText: true
+        })
+
+        if (!objAiResult.blnSuccess) {
+            return res.status(objAiResult.intStatus).json({ message: objAiResult.strMessage })
+        }
+
+        return res.status(200).json({ message: 'Cover letter generated.', data: { coverLetter: objAiResult.strText } })
+    } catch (objError) {
+        console.error('Cover letter Gemini error:', objError.message)
+        return res.status(500).json({ message: 'Failed to generate cover letter.', error: objError.message })
+    }
+})
 
 // Start server
 app.listen(PORT, () => {

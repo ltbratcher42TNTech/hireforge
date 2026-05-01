@@ -7,7 +7,7 @@
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="assets/bootstrap.min.css">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="assets/lux.css">
+    <link rel="stylesheet" href="assets/flatly.css">
 </head>
 <body class="d-flex flex-column min-vh-100">
     <div class="flex-grow-1">
@@ -23,6 +23,7 @@
                 <button class="btn btn-primary me-2" id="btnNavCerts">Certifications</button>
                 <button class="btn btn-primary me-2" id="btnNavAwards">Awards</button>
                 <button class="btn btn-primary me-2" id="btnNavResume">Resume</button>
+                <button class="btn btn-primary me-2" id="btnNavCoverLetter">Cover Letter</button>
             </nav>
         </main>
 
@@ -185,6 +186,60 @@
                     </div>
                 </div>
             </div>
+
+            <div id="coverLetterSection" style="display:none;">
+                <h3>Cover Letter Generator</h3>
+
+                <div class="card p-3 mb-3">
+                    <input type="text" id="txtCLCompany" class="form-control mb-2" placeholder="Company Name">
+                    <input type="text" id="txtCLRole" class="form-control mb-2" placeholder="Role / Job Title">
+                    <textarea id="txtCLJobDescription" class="form-control mb-2" placeholder="Paste Job Description"></textarea>
+
+                    <select id="selCLTone" class="form-select mb-2">
+                        <option value="professional">Professional</option>
+                        <option value="formal">Formal</option>
+                        <option value="enthusiastic">Enthusiastic</option>
+                        <option value="direct">Direct</option>
+                    </select>
+
+                    <input type="number" id="txtCLLength" class="form-control mb-2" placeholder="Approx word count (e.g. 250)">
+                    <input type="number" id="txtCLParagraphs" class="form-control mb-2" placeholder="Paragraph count (e.g. 3)">
+
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="chkCLIncludeAchievements">
+                        <label class="form-check-label">Include specific achievements</label>
+                    </div>
+
+                    <textarea id="txtCLCompanyContext" class="form-control mb-2" placeholder="Company mission/culture (optional)"></textarea>
+
+                    <button class="btn btn-success" id="btnGenerateCoverLetter">Generate Cover Letter</button>
+                    <p id="pCLStatus" class="text-muted mt-2"></p>
+
+                    <div class="card p-3 mb-3">
+                        <h5>Select Experience to Include</h5>
+                        <div id="divCLJobs"></div>
+                    </div>
+
+                    <div class="card p-3 mb-3">
+                        <h5>Select Skills</h5>
+                        <div id="divCLSkills"></div>
+                    </div>
+
+                    <div class="card p-3 mb-3">
+                        <h5>Select Certifications</h5>
+                        <div id="divCLCerts"></div>
+                    </div>
+
+                    <div class="card p-3 mb-3">
+                        <h5>Select Awards</h5>
+                        <div id="divCLAwards"></div>
+                    </div>
+                </div>
+
+                <div class="card p-3">
+                    <textarea id="txtCoverLetterOutput" class="form-control" rows="15"></textarea>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -210,7 +265,7 @@
                     <p class="mb-2">Thank you to the following libraries & frameworks that have been used which support this project:</p>
                     <ul class="mb-0">
                         <li>Bootstrap 5</li>
-                        <li>Bootswatch Lux theme</li>
+                        <li>Bootswatch Flatly theme</li>
                         <li>Node.js + Express</li>
                         <li>SQLite</li>
                     </ul>

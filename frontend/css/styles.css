@@ -68,7 +68,7 @@ body {
 
 @media print {
 
-    /* Absolutely mercilessly KILL Bootstrap flex layout for print (assassination for messing with my print)*/
+    /* Absolutely mercilessly KILL Bootstrap flex layout for print (assassination for messing with my print feature)*/
     body.d-flex {
         display: block !important;
     }

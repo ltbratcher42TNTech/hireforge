@@ -14,6 +14,7 @@ const showSection = (strSectionName) => {
     document.getElementById('certsSection').style.display = 'none'
     document.getElementById('awardsSection').style.display = 'none'
     document.getElementById('resumeSection').style.display = 'none'
+    document.getElementById('coverLetterSection').style.display = 'none'
     document.getElementById(strSectionName + 'Section').style.display = 'block'
 }
 
@@ -50,6 +51,11 @@ document.querySelector('#btnNavAwards').addEventListener('click', () => {
 document.querySelector('#btnNavResume').addEventListener('click', () => {
     showSection('resume')
     loadResumeBuilderData()
+})
+
+document.querySelector('#btnNavCoverLetter').addEventListener('click', () => {
+    showSection('coverLetter')
+    loadCoverLetterData() 
 })
 
 // ===================================================
@@ -1147,3 +1153,269 @@ document.querySelector('#btnAiPolishResume').addEventListener('click', aiPolishR
 document.querySelector('#btnPrintResume').addEventListener('click', () => {
     window.print()
 })
+
+// ========================================================
+// Cover letter
+// ========================================================
+
+// This will essentially be a copy paste of whats done for resume
+const objCoverLetterDataCache = {
+    objProfile: null,
+    arrJobs: [],
+    arrCategories: [],
+    arrSkills: [],
+    arrCerts: [],
+    arrAwards: [],
+    objDetailsByJobID: {}
+}
+
+// Loads all data needed to populate cover letter selection UI
+const loadCoverLetterData = async () => {
+    document.querySelector('#pCLStatus').innerText = 'Loading data...'
+
+    try {
+        const objProfileResponse = await fetch(`${strBaseURL}/api/profile`)
+        if (objProfileResponse.status === 200) {
+            const objProfileData = await objProfileResponse.json()
+            objCoverLetterDataCache.objProfile = objProfileData.profile || null
+        } else {
+            objCoverLetterDataCache.objProfile = null
+        }
+
+        const objJobsResponse = await fetch(`${strBaseURL}/api/jobs`)
+        const objJobsData = await objJobsResponse.json()
+        objCoverLetterDataCache.arrJobs = objJobsData.jobs || []
+
+        const objCategoryResponse = await fetch(`${strBaseURL}/api/skillcategories`)
+        const objCategoryData = await objCategoryResponse.json()
+        objCoverLetterDataCache.arrCategories = objCategoryData.data || []
+
+        const objSkillsResponse = await fetch(`${strBaseURL}/api/skills`)
+        const objSkillsData = await objSkillsResponse.json()
+        objCoverLetterDataCache.arrSkills = objSkillsData.data || []
+
+        const objCertResponse = await fetch(`${strBaseURL}/api/certifications`)
+        const objCertData = await objCertResponse.json()
+        objCoverLetterDataCache.arrCerts = objCertData.data || []
+
+        const objAwardResponse = await fetch(`${strBaseURL}/api/awards`)
+        const objAwardData = await objAwardResponse.json()
+        objCoverLetterDataCache.arrAwards = objAwardData.data || []
+
+        objCoverLetterDataCache.objDetailsByJobID = {}
+        for (const objJob of objCoverLetterDataCache.arrJobs) {
+            const objDetailResponse = await fetch(`${strBaseURL}/api/jobs/${objJob.JobID}/details`)
+            const objDetailData = await objDetailResponse.json()
+            objCoverLetterDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data || []
+        }
+
+        renderCoverLetterSelectionUI()
+        document.querySelector('#pCLStatus').innerText = 'Ready. Fill in the fields and click Generate.'
+    } catch (objError) {
+        console.error('Cover letter data load failed:', objError)
+        document.querySelector('#pCLStatus').innerText = 'Failed to load data.'
+    }
+}
+
+const renderCoverLetterSelectionUI = () => {
+    renderCLJobsSelection()
+    renderCLSkillsSelection()
+    renderCLCertSelection()
+    renderCLAwardSelection()
+}
+
+const renderCLJobsSelection = () => {
+    const divCLJobs = document.querySelector('#divCLJobs')
+    const arrJobs = objCoverLetterDataCache.arrJobs
+
+    if (!arrJobs.length) {
+        divCLJobs.innerHTML = '<p class="text-muted mb-0">No jobs found.</p>'
+        return
+    }
+
+    let strHTML = ''
+    arrJobs.forEach((objJob) => {
+        strHTML += `
+            <div class="form-check">
+                <input class="form-check-input chkCLJob" type="checkbox" id="chkCLJob${objJob.JobID}" data-job-id="${objJob.JobID}" checked aria-label="Include job ${objJob.Title}">
+                <label class="form-check-label" for="chkCLJob${objJob.JobID}">
+                    ${objJob.Title} — ${objJob.Company} (${formatResumeDateRange(objJob.StartDate, objJob.EndDate)})
+                </label>
+            </div>
+        `
+    })
+
+    divCLJobs.innerHTML = strHTML
+}
+
+const renderCLSkillsSelection = () => {
+    const divCLSkills = document.querySelector('#divCLSkills')
+    const arrCategories = objCoverLetterDataCache.arrCategories
+    const arrSkills = objCoverLetterDataCache.arrSkills
+
+    if (!arrSkills.length) {
+        divCLSkills.innerHTML = '<p class="text-muted mb-0">No skills found.</p>'
+        return
+    }
+
+    let strHTML = ''
+    arrCategories.forEach((objCategory) => {
+        const arrCategorySkills = arrSkills.filter((objSkill) => objSkill.CategoryID === objCategory.CategoryID)
+        if (!arrCategorySkills.length) return
+
+        strHTML += `<h6 class="mt-2">${objCategory.Name}</h6>`
+        strHTML += arrCategorySkills.map((objSkill) => `
+            <div class="form-check">
+                <input class="form-check-input chkCLSkill" type="checkbox" id="chkCLSkill${objSkill.SkillID}" data-skill-id="${objSkill.SkillID}" checked aria-label="Include skill ${objSkill.Name}">
+                <label class="form-check-label" for="chkCLSkill${objSkill.SkillID}">${objSkill.Name}</label>
+            </div>
+        `).join('')
+    })
+
+    divCLSkills.innerHTML = strHTML
+}
+
+const renderCLCertSelection = () => {
+    const divCLCerts = document.querySelector('#divCLCerts')
+    const arrCerts = objCoverLetterDataCache.arrCerts
+
+    if (!arrCerts.length) {
+        divCLCerts.innerHTML = '<p class="text-muted mb-0">No certifications found.</p>'
+        return
+    }
+
+    divCLCerts.innerHTML = arrCerts.map((objCert) => `
+        <div class="form-check">
+            <input class="form-check-input chkCLCert" type="checkbox" id="chkCLCert${objCert.CertID}" data-cert-id="${objCert.CertID}" checked aria-label="Include certification ${objCert.Name}">
+            <label class="form-check-label" for="chkCLCert${objCert.CertID}">
+                ${objCert.Name} — ${objCert.Issuer}
+            </label>
+        </div>
+    `).join('')
+}
+
+const renderCLAwardSelection = () => {
+    const divCLAwards = document.querySelector('#divCLAwards')
+    const arrAwards = objCoverLetterDataCache.arrAwards
+
+    if (!arrAwards.length) {
+        divCLAwards.innerHTML = '<p class="text-muted mb-0">No awards found.</p>'
+        return
+    }
+
+    divCLAwards.innerHTML = arrAwards.map((objAward) => `
+        <div class="form-check">
+            <input class="form-check-input chkCLAward" type="checkbox" id="chkCLAward${objAward.AwardID}" data-award-id="${objAward.AwardID}" checked aria-label="Include award ${objAward.Name}">
+            <label class="form-check-label" for="chkCLAward${objAward.AwardID}">
+                ${objAward.Name}${objAward.Issuer ? ' — ' + objAward.Issuer : ''}
+            </label>
+        </div>
+    `).join('')
+}
+
+// AI assisted: builds a structured context string from user selections and form inputs,
+// then sends it to the backend cover letter route which calls Gemini.
+const generateCoverLetter = async () => {
+    const strCompany = document.querySelector('#txtCLCompany').value.trim()
+    const strRole = document.querySelector('#txtCLRole').value.trim()
+    const strJobDescription = document.querySelector('#txtCLJobDescription').value.trim()
+    const strTone = document.querySelector('#selCLTone').value
+    const intLength = parseInt(document.querySelector('#txtCLLength').value) || 250
+    const intParagraphs = parseInt(document.querySelector('#txtCLParagraphs').value) || 3
+    const blnIncludeAchievements = document.querySelector('#chkCLIncludeAchievements').checked
+    const strCompanyContext = document.querySelector('#txtCLCompanyContext').value.trim()
+    const strGeminiApiKey = localStorage.getItem(strGeminiKeyStorageName) || ''
+
+    let blnError = false
+    let strMessage = ''
+
+    if (!strCompany) {
+        blnError = true
+        strMessage += '<p>Company name is required</p>'
+    }
+    if (!strRole) {
+        blnError = true
+        strMessage += '<p>Role/job title is required</p>'
+    }
+    if (!strJobDescription) {
+        blnError = true
+        strMessage += '<p>Job description is required</p>'
+    }
+
+    if (blnError) {
+        alert(strMessage)
+        return
+    }
+
+    // Collect selected jobs with their deets
+    const arrSelectedJobIDs = Array.from(document.querySelectorAll('.chkCLJob:checked')).map((objEl) => objEl.dataset.jobId)
+    const arrSelectedSkillIDs = Array.from(document.querySelectorAll('.chkCLSkill:checked')).map((objEl) => objEl.dataset.skillId)
+    const arrSelectedCertIDs = Array.from(document.querySelectorAll('.chkCLCert:checked')).map((objEl) => objEl.dataset.certId)
+    const arrSelectedAwardIDs = Array.from(document.querySelectorAll('.chkCLAward:checked')).map((objEl) => objEl.dataset.awardId)
+
+    const arrSelectedJobs = objCoverLetterDataCache.arrJobs
+        .filter((objJob) => arrSelectedJobIDs.includes(objJob.JobID))
+        .map((objJob) => ({
+            title: objJob.Title,
+            company: objJob.Company,
+            dates: formatResumeDateRange(objJob.StartDate, objJob.EndDate),
+            bullets: (objCoverLetterDataCache.objDetailsByJobID[objJob.JobID] || []).map((objD) => objD.Detail)
+        }))
+
+    const arrSelectedSkills = objCoverLetterDataCache.arrSkills
+        .filter((objSkill) => arrSelectedSkillIDs.includes(objSkill.SkillID))
+        .map((objSkill) => objSkill.Name)
+
+    const arrSelectedCerts = objCoverLetterDataCache.arrCerts
+        .filter((objCert) => arrSelectedCertIDs.includes(objCert.CertID))
+        .map((objCert) => `${objCert.Name} (${objCert.Issuer})`)
+
+    const arrSelectedAwards = objCoverLetterDataCache.arrAwards
+        .filter((objAward) => arrSelectedAwardIDs.includes(objAward.AwardID))
+        .map((objAward) => `${objAward.Name}${objAward.Issuer ? ' from ' + objAward.Issuer : ''}${objAward.Description ? ': ' + objAward.Description : ''}`)
+
+    const objProfile = objCoverLetterDataCache.objProfile
+
+    document.querySelector('#pCLStatus').innerText = 'Generating cover letter...'
+    document.querySelector('#txtCoverLetterOutput').value = ''
+
+    console.log('jobs going to server:', arrSelectedJobs)
+    console.log('skills:', arrSelectedSkills)
+    console.log('certs:', arrSelectedCerts)
+    console.log('awards:', arrSelectedAwards)
+    console.log('profile:', objProfile)
+
+    const objResponse = await fetch(`${strBaseURL}/api/ai/cover-letter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            geminiApiKey: strGeminiApiKey,
+            company: strCompany,
+            role: strRole,
+            jobDescription: strJobDescription,
+            tone: strTone,
+            targetLength: intLength,
+            paragraphCount: intParagraphs,
+            includeAchievements: blnIncludeAchievements,
+            companyContext: strCompanyContext,
+            profile: objProfile,
+            jobs: arrSelectedJobs,
+            skills: arrSelectedSkills,
+            certifications: arrSelectedCerts,
+            awards: arrSelectedAwards
+        })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200) {
+        document.querySelector('#pCLStatus').innerText = ''
+        alert(objData.message || 'Cover letter generation failed.')
+        return
+    }
+
+    document.querySelector('#txtCoverLetterOutput').value = objData.data.coverLetter
+    document.querySelector('#pCLStatus').innerText = 'Cover letter generated. Review and edit as needed.'
+}
+
+document.querySelector('#btnGenerateCoverLetter').addEventListener('click', generateCoverLetter)
