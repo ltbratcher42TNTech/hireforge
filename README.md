@@ -86,8 +86,7 @@ Launches HireForge as a standalone Electron window, no browser necessary.
 
 ## Disclaimer
 
-All AI-generated content should be reviewed before use. HireForge assists with
-writing and formatting — final judgment is always yours.
+All AI-generated content should be reviewed before use. HireForge assists with writing and formatting. The final judgment is always yours.
 
 ---
 
