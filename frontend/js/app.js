@@ -16,6 +16,7 @@ const showSection = (strSectionName) => {
     document.getElementById('resumeSection').style.display = 'none'
     document.getElementById('coverLetterSection').style.display = 'none'
     document.getElementById('thankYouSection').style.display = 'none'
+    document.getElementById('aboutDevSection').style.display = 'none'
     document.getElementById(strSectionName + 'Section').style.display = 'block'
 }
 
@@ -61,6 +62,10 @@ document.querySelector('#btnNavCoverLetter').addEventListener('click', () => {
 
 document.querySelector('#btnNavThankYou').addEventListener('click', () => {
     showSection('thankYou')
+})
+
+document.querySelector('#btnAboutDev').addEventListener('click', () => {
+    showSection('aboutDev')
 })
 
 // ===================================================
