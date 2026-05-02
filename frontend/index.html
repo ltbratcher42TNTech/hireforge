@@ -24,6 +24,7 @@
                 <button class="btn btn-primary me-2" id="btnNavAwards">Awards</button>
                 <button class="btn btn-primary me-2" id="btnNavResume">Resume</button>
                 <button class="btn btn-primary me-2" id="btnNavCoverLetter">Cover Letter</button>
+                <button class="btn btn-primary me-2" id="btnNavThankYou">Thank You</button>
             </nav>
         </main>
 
@@ -238,6 +239,24 @@
 
                 <div class="card p-3">
                     <textarea id="txtCoverLetterOutput" class="form-control" rows="15"></textarea>
+                </div>
+                
+            </div>
+
+            <div id="thankYouSection" style="display:none;">
+                <h3>Thank-You Letter Generator</h3>
+                <div class="card p-3">
+                    <input type="text" id="txtTYJobTitle" class="form-control mb-2" placeholder="Job Title" aria-label="Thank you job title">
+                    <input type="text" id="txtTYCompanyName" class="form-control mb-2" placeholder="Company Name" aria-label="Thank you company name">
+                    <select id="selTYTone" class="form-select mb-2" aria-label="Thank you tone preference">
+                        <option value="professional">Professional</option>
+                        <option value="warm">Warm</option>
+                        <option value="concise">Concise</option>
+                    </select>
+                    <textarea id="txtTYInterviewNotes" class="form-control mb-2" placeholder="Interview notes (optional)" aria-label="Thank you interview notes"></textarea>
+                    <button class="btn btn-success" id="btnGenerateThankYou">Generate Thank-You Letter</button>
+                    <p id="pTYStatus" class="text-muted mt-2" aria-live="polite"></p>
+                    <textarea id="txtThankYouOutput" class="form-control" rows="8" aria-label="Thank you letter output"></textarea>
                 </div>
             </div>
         </div>

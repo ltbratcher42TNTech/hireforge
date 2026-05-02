@@ -867,6 +867,53 @@ Start directly with the opening paragraph. Do not include any preamble or explan
     }
 })
 
+// AI assisted: lightweight thank-you note generator using existing Gemini helper.
+app.post('/api/ai/thank-you-letter', async (req,res,next) => {
+    const strGeminiApiKey = req.body.geminiApiKey ? req.body.geminiApiKey.trim() : ''
+    const strJobTitle = req.body.jobTitle ? req.body.jobTitle.trim() : ''
+    const strCompanyName = req.body.companyName ? req.body.companyName.trim() : ''
+    const strInterviewNotes = req.body.interviewNotes ? req.body.interviewNotes.trim() : ''
+    const strTonePreference = req.body.tonePreference ? req.body.tonePreference.trim() : ''
+
+    if (!strJobTitle || !strCompanyName || !strTonePreference) {
+        return res.status(400).json({ message: 'Job title, company name, and tone preference are required.' })
+    }
+
+    const strPrompt = `
+Write a concise post-interview thank-you email.
+
+Role: ${strJobTitle}
+Company: ${strCompanyName}
+Tone: ${strTonePreference}
+${strInterviewNotes ? `Interview notes/context: ${strInterviewNotes}` : 'Interview notes/context: none provided'}
+
+Rules:
+- Keep it short (about 100 to 120 words).
+- Include: subject line, greeting, 2 short paragraphs, and a simple sign-off.
+- Sound specific if interview notes are provided.
+- Do not invent or hallucinate facts that were not provided.
+- Return only the final thank-you email text.
+`.trim()
+
+    try {
+        const objAiResult = await callGemini({
+            strUserApiKey: strGeminiApiKey,
+            strPrompt: strPrompt,
+            blnRawText: true
+        })
+
+        if (!objAiResult.blnSuccess) {
+            return res.status(objAiResult.intStatus).json({ message: objAiResult.strMessage })
+        }
+
+        return res.status(200).json({ message: 'Thank-you letter generated.', data: { thankYouLetter: objAiResult.strText } })
+    } catch (objError) {
+        console.error('Thank-you letter Gemini error:', objError.message)
+        return res.status(500).json({ message: 'Failed to generate thank-you letter.', error: objError.message })
+    }
+})
+
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`)

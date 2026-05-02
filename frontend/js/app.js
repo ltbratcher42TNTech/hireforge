@@ -15,6 +15,7 @@ const showSection = (strSectionName) => {
     document.getElementById('awardsSection').style.display = 'none'
     document.getElementById('resumeSection').style.display = 'none'
     document.getElementById('coverLetterSection').style.display = 'none'
+    document.getElementById('thankYouSection').style.display = 'none'
     document.getElementById(strSectionName + 'Section').style.display = 'block'
 }
 
@@ -56,6 +57,10 @@ document.querySelector('#btnNavResume').addEventListener('click', () => {
 document.querySelector('#btnNavCoverLetter').addEventListener('click', () => {
     showSection('coverLetter')
     loadCoverLetterData() 
+})
+
+document.querySelector('#btnNavThankYou').addEventListener('click', () => {
+    showSection('thankYou')
 })
 
 // ===================================================
@@ -1419,3 +1424,61 @@ const generateCoverLetter = async () => {
 }
 
 document.querySelector('#btnGenerateCoverLetter').addEventListener('click', generateCoverLetter)
+
+// AI assisted: simple thank-you generator, intentionally smaller than cover letter flow.
+const generateThankYouLetter = async () => {
+    const strJobTitle = document.querySelector('#txtTYJobTitle').value.trim()
+    const strCompanyName = document.querySelector('#txtTYCompanyName').value.trim()
+    const strTonePreference = document.querySelector('#selTYTone').value
+    const strInterviewNotes = document.querySelector('#txtTYInterviewNotes').value.trim()
+    const strGeminiApiKey = localStorage.getItem(strGeminiKeyStorageName) || ''
+
+    let blnError = false
+    let strMessage = ''
+
+    if (!strJobTitle) {
+        blnError = true
+        strMessage += '<p>Job title is required</p>'
+    }
+    if (!strCompanyName) {
+        blnError = true
+        strMessage += '<p>Company name is required</p>'
+    }
+    if (!strTonePreference) {
+        blnError = true
+        strMessage += '<p>Tone preference is required</p>'
+    }
+
+    if (blnError) {
+        alert(strMessage)
+        return
+    }
+
+    document.querySelector('#pTYStatus').innerText = 'Generating thank-you letter...'
+    document.querySelector('#txtThankYouOutput').value = ''
+
+    const objResponse = await fetch(`${strBaseURL}/api/ai/thank-you-letter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            geminiApiKey: strGeminiApiKey,
+            jobTitle: strJobTitle,
+            companyName: strCompanyName,
+            interviewNotes: strInterviewNotes,
+            tonePreference: strTonePreference
+        })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200) {
+        document.querySelector('#pTYStatus').innerText = ''
+        alert(objData.message || 'Thank-you letter generation failed.')
+        return
+    }
+
+    document.querySelector('#txtThankYouOutput').value = objData.data.thankYouLetter
+    document.querySelector('#pTYStatus').innerText = 'Thank-you letter generated. Review and edit as needed.'
+}
+
+document.querySelector('#btnGenerateThankYou').addEventListener('click', generateThankYouLetter)
