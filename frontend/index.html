@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Resume Builder</title>
+    <title>HireForge</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="assets/bootstrap.min.css">
     <link rel="stylesheet" href="css/styles.css">
@@ -12,8 +12,17 @@
 <body class="d-flex flex-column min-vh-100">
     <div class="flex-grow-1">
         <div class="container mt-4">
-            <h1 class="mb-4">Resume Builder</h1>
+            <header class="d-flex align-items-center gap-3 py-3 mb-4 border-bottom"">
+                <div class="d-flex align-items-center">
+                    <img src="assets/images/HireForgeLogo-nobg.png" alt="HireForge Logo" style="height:150px; width:auto; margin-right:12px;">
+                    <div>
+                        <h1 class="display-5 fw-bold mb-1">HireForge</h1>
+                        <p class="text-muted mb-0">Build, refine, and generate job-ready materials</p>
+                    </div>
+                </div>
+            </header>
         <main>
+
             <!-- Navigation -->
             <nav aria-label="Main navigation" class="mb-4">
                 <button class="btn btn-primary me-2" id="btnNavDashboard">Dashboard</button>
@@ -25,14 +34,21 @@
                 <button class="btn btn-primary me-2" id="btnNavResume">Resume</button>
                 <button class="btn btn-primary me-2" id="btnNavCoverLetter">Cover Letter</button>
                 <button class="btn btn-primary me-2" id="btnNavThankYou">Thank You</button>
+                <button class="btn btn-primary me-2" id="btnAboutDev">About The Dev</button>
             </nav>
         </main>
 
 
             <!-- Dashboard -->
             <div id="dashboardSection">
-                <h2>Dashboard</h3>
-                <p>Welcome! Start building your resume.</p>
+                <h2></h2>
+                <h3>Dashboard</h3>
+                
+                <p class="lead">Welcome to HireForge. This is your all-in-one tool for building, refining, and generating job-ready materials.</p>
+
+                <p>Use the sections above to create your profile, add work experience, organize skills, and track certifications and awards. When you're ready, you can generate a polished resume, craft a tailored cover letter, or create a professional thank-you note which can then be sent to recruiters/interviewers after an interview.</p>
+
+                <p class="text-muted">Tip: Start with your profile, be sure to add your Google Gemini API key, then add jobs and bullet points before generating your resume.<p>
             </div>
 
             <!-- Used codex to implement this, simply to see how it would do with little context -->
@@ -188,6 +204,7 @@
                 </div>
             </div>
 
+            <!-- Cover Letter -->
             <div id="coverLetterSection" style="display:none;">
                 <h3>Cover Letter Generator</h3>
 
@@ -243,6 +260,7 @@
                 
             </div>
 
+            <!-- Thank You Letter -->
             <div id="thankYouSection" style="display:none;">
                 <h3>Thank-You Letter Generator</h3>
                 <div class="card p-3">
@@ -257,6 +275,45 @@
                     <button class="btn btn-success" id="btnGenerateThankYou">Generate Thank-You Letter</button>
                     <p id="pTYStatus" class="text-muted mt-2" aria-live="polite"></p>
                     <textarea id="txtThankYouOutput" class="form-control" rows="8" aria-label="Thank you letter output"></textarea>
+                </div>
+            </div>
+
+            <!-- About the Dev -->
+            <div id="aboutDevSection" style="display:none;">
+                <h3>About the Dev</h3>
+                <div class="card p-4">
+                    <div class="text-center mb-4">
+                        <img src="assets/images/MeAsPenguinDev.png" class="rounded-circle mb-3" style="width:300px; height:300px; object-fit:cover;" alt="Lanis Bratcher, Penguin Extraordinaire">
+                        <h4 class="mb-0">Lanis Bratcher</h4>
+                        <p class="text-muted">Computer Science Student at Tennessee Tech University, graduating Fall 2026</p>
+                    </div>
+
+                    <p>
+                        I enjoy building tools that solve real problems for my peers, especially around productivity and job preparation in a market that seems stacked against students. I'm hopeful that anyone who uses this achieves success utilizing this tool!
+                    </p>
+                    <p>
+                        This project was also an opportunity to improve my skills in full-stack development, data persistence through SQLite, and designing an appealing user experiences from scratch.
+                    </p>
+
+                    <hr>
+
+                    <h5>Why HireForge Exists</h5>
+                    <p>
+                        HireForge was built as a final project for CSC3100 with a simple goal: make resume building less painful and more structured for students like myself. It, however, has grown into much more. I thoroughly enjoyed building this and have pushed it beyond the requirements.
+                    </p>
+                    <p>
+                        Instead of starting from scratch, this tool helps you organize your experience, skills, and achievements into reusable building blocks, then generate a resume, cover letter, or thank-you note tailored for recruiters and interviewers.
+                    </p>
+
+                    <hr>
+
+                    <h5>Built With</h5>
+                    <ul class="text-muted">
+                    <li>Frontend: HTML, Bootstrap (Flatly theme), vanilla JavaScript</li>
+                    <li>Backend: Node.js + Express</li>
+                    <li>Storage: SQLite</li>
+                    <li>AI features: Google Gemini API (user-provided key required)</li>
+                    </ul>
                 </div>
             </div>
         </div>
