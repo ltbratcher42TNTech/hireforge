@@ -3,7 +3,7 @@ const { app, BrowserWindow } = require('electron')
 const { spawn } = require('child_process')
 const path = require('path')
 
-// Start the Express backend
+// Start the backend sevrer
 const objServer = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
     cwd: path.join(__dirname, '..'),
     stdio: 'inherit'
