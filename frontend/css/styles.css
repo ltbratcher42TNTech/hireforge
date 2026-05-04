@@ -56,6 +56,10 @@ body {
     margin-bottom: 0.2rem;
 }
 
+.resume-preview-section p {
+    margin-bottom: 0.2rem;
+}
+
 /* AI Generated Resume Style*/
 .resume-preview h2,
 .resume-preview h3 {
@@ -67,6 +71,12 @@ body {
 }
 
 @media print {
+
+    /* target header and logo so it doesnt appear */
+    .container header, 
+    header.d-flex {
+        display: none !important;
+    }
 
     /* Absolutely mercilessly KILL Bootstrap flex layout for print (assassination for messing with my print feature)*/
     body.d-flex {
