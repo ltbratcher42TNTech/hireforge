@@ -7,11 +7,11 @@ Run before merging or deploying.
 ---
 
 # Profile
-- [ ] Can create profile
-- [ ] Can edit profile
-- [ ] Profile persists after refresh
-- [ ] Empty required fields are rejected
-- [ ] Long input does not break layout
+- [ x ] Can create profile
+- [ x ] Can edit profile
+- [ x ] Profile persists after refresh
+- [ x ] Empty required fields are rejected
+- [ x ] Long input does not break layout
 
 ---
 
