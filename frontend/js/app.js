@@ -88,6 +88,17 @@ const objResumeDataCache = {
 
 const strGeminiKeyStorageName = 'strGeminiApiKey'
 
+// AI assisted: temporary compatibility helper for wrapped API payloads during stabilization.
+const getEnvelopeData = (objResponseData) => {
+    if (!objResponseData || objResponseData.data === undefined || objResponseData.data === null) {
+        return null
+    }
+    if (objResponseData.data && objResponseData.data.data !== undefined) {
+        return objResponseData.data.data
+    }
+    return objResponseData.data
+}
+
 // AI assisted here, this is basically local key manager for Gemini API key save/clear usage in browser only.
 const loadGeminiKeyStatus = async () => {
     const strSavedGeminiKey = localStorage.getItem(strGeminiKeyStorageName) || ''
@@ -125,7 +136,11 @@ const loadProfile = async () => {
         return
     }
 
-    const objProfile = objData.profile
+    const objProfile = objData.data && objData.data.profile ? objData.data.profile : null
+    if (!objProfile) {
+        alert('Profile data is missing from server response.')
+        return
+    }
     strCurrentProfileID = objProfile.ProfileID
 
     document.querySelector('#txtFullName').value = objProfile.FullName || ''
@@ -205,7 +220,17 @@ document.querySelector('#btnSaveProfile').addEventListener('click', async () => 
         return
     }
 
-    strCurrentProfileID = objData.profile.ProfileID
+    // AI helped write this, basically helps handle missing data gracefully so it doesn't break. 
+    // The commented out code was MUCH more brittle and could cause issues like crashes
+    
+    // strCurrentProfileID = objData.profile.ProfileID
+
+    const objSavedProfile = objData.data && objData.data.profile ? objData.data.profile : null
+    if (!objSavedProfile) {
+        alert('Profile data is missing from server response.')
+        return
+    }
+    strCurrentProfileID = objSavedProfile.ProfileID
     document.querySelector('#pProfileStatus').innerText = 'Profile saved successfully.'
 })
 
@@ -216,7 +241,10 @@ document.querySelector('#btnSaveProfile').addEventListener('click', async () => 
 const loadJobs = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/jobs`)
     const objData = await objResponse.json()
-    const arrJobs = objData.jobs
+    // Same thing here, old code could crash, AI recommended this since it handles missing data gracefullt
+    // const arrJobs = objData.jobs
+
+    const arrJobs = objData.data && objData.data.jobs ? objData.data.jobs : []
 
     const divJobs = document.querySelector('#divJobs')
     divJobs.innerHTML = ''
@@ -245,7 +273,7 @@ const loadDetails = async (strJobID) => {
     console.log('loadDetails called with:', strJobID)
     const objResponse = await fetch(`${strBaseURL}/api/jobs/${strJobID}/details`)
     const objData = await objResponse.json()
-    const arrDetails = objData.data
+    const arrDetails = getEnvelopeData(objData) || []
     console.log(arrDetails)
 
     const divDetailList = document.querySelector('#divDetailList')
@@ -486,7 +514,7 @@ let strCurrentCategoryID = ''
 const loadCategories = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/skillcategories`)
     const objData = await objResponse.json()
-    const arrCategories = objData.data
+    const arrCategories = getEnvelopeData(objData) || []
 
     const divCategories = document.querySelector('#divCategories')
     divCategories.innerHTML = ''
@@ -504,7 +532,7 @@ const loadCategories = async () => {
 const loadSkills = async (strCategoryID) => {
     const objResponse = await fetch(`${strBaseURL}/api/skills?categoryId=${strCategoryID}`)
     const objData = await objResponse.json()
-    const arrSkills = objData.data
+    const arrSkills = getEnvelopeData(objData) || []
 
     const divSkillList = document.querySelector('#divSkillList')
     divSkillList.innerHTML = ''
@@ -634,7 +662,7 @@ document.querySelector('#btnAddSkill').addEventListener('click', async function(
 const loadCerts = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/certifications`)
     const objData = await objResponse.json()
-    const arrCerts = objData.data
+    const arrCerts = getEnvelopeData(objData) || []
 
     const divCerts = document.querySelector('#divCerts')
     divCerts.innerHTML = ''
@@ -722,7 +750,7 @@ document.querySelector('#btnAddCert').addEventListener('click', async function()
 const loadAwards = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/awards`)
     const objData = await objResponse.json()
-    const arrAwards = objData.data
+    const arrAwards = getEnvelopeData(objData) || []
 
     const divAwards = document.querySelector('#divAwards')
     divAwards.innerHTML = ''
@@ -862,36 +890,36 @@ const loadResumeBuilderData = async () => {
         const objProfileResponse = await fetch(`${strBaseURL}/api/profile`)
         if (objProfileResponse.status === 200) {
             const objProfileData = await objProfileResponse.json()
-            objResumeDataCache.objProfile = objProfileData.profile || null
+            objResumeDataCache.objProfile = objProfileData.data && objProfileData.data.profile ? objProfileData.data.profile : null
         } else {
             objResumeDataCache.objProfile = null
         }
 
         const objJobsResponse = await fetch(`${strBaseURL}/api/jobs`)
         const objJobsData = await objJobsResponse.json()
-        objResumeDataCache.arrJobs = objJobsData.jobs || []
+        objResumeDataCache.arrJobs = objJobsData.data && objJobsData.data.jobs ? objJobsData.data.jobs : []
 
         const objCategoryResponse = await fetch(`${strBaseURL}/api/skillcategories`)
         const objCategoryData = await objCategoryResponse.json()
-        objResumeDataCache.arrCategories = objCategoryData.data || []
+        objResumeDataCache.arrCategories = getEnvelopeData(objCategoryData) || []
 
         const objSkillsResponse = await fetch(`${strBaseURL}/api/skills`)
         const objSkillsData = await objSkillsResponse.json()
-        objResumeDataCache.arrSkills = objSkillsData.data || []
+        objResumeDataCache.arrSkills = getEnvelopeData(objSkillsData) || []
 
         const objCertResponse = await fetch(`${strBaseURL}/api/certifications`)
         const objCertData = await objCertResponse.json()
-        objResumeDataCache.arrCerts = objCertData.data || []
+        objResumeDataCache.arrCerts = getEnvelopeData(objCertData) || []
 
         const objAwardResponse = await fetch(`${strBaseURL}/api/awards`)
         const objAwardData = await objAwardResponse.json()
-        objResumeDataCache.arrAwards = objAwardData.data || []
+        objResumeDataCache.arrAwards = getEnvelopeData(objAwardData) || []
 
         objResumeDataCache.objDetailsByJobID = {}
         for (const objJob of objResumeDataCache.arrJobs) {
             const objDetailResponse = await fetch(`${strBaseURL}/api/jobs/${objJob.JobID}/details`)
             const objDetailData = await objDetailResponse.json()
-            objResumeDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data || []
+            objResumeDataCache.objDetailsByJobID[objJob.JobID] = getEnvelopeData(objDetailData) || []
         }
 
         renderResumeSelectionUI()
@@ -1187,36 +1215,36 @@ const loadCoverLetterData = async () => {
         const objProfileResponse = await fetch(`${strBaseURL}/api/profile`)
         if (objProfileResponse.status === 200) {
             const objProfileData = await objProfileResponse.json()
-            objCoverLetterDataCache.objProfile = objProfileData.profile || null
+            objCoverLetterDataCache.objProfile = objProfileData.data && objProfileData.data.profile ? objProfileData.data.profile : null
         } else {
             objCoverLetterDataCache.objProfile = null
         }
 
         const objJobsResponse = await fetch(`${strBaseURL}/api/jobs`)
         const objJobsData = await objJobsResponse.json()
-        objCoverLetterDataCache.arrJobs = objJobsData.jobs || []
+        objCoverLetterDataCache.arrJobs = objJobsData.data && objJobsData.data.jobs ? objJobsData.data.jobs : []
 
         const objCategoryResponse = await fetch(`${strBaseURL}/api/skillcategories`)
         const objCategoryData = await objCategoryResponse.json()
-        objCoverLetterDataCache.arrCategories = objCategoryData.data || []
+        objCoverLetterDataCache.arrCategories = getEnvelopeData(objCategoryData) || []
 
         const objSkillsResponse = await fetch(`${strBaseURL}/api/skills`)
         const objSkillsData = await objSkillsResponse.json()
-        objCoverLetterDataCache.arrSkills = objSkillsData.data || []
+        objCoverLetterDataCache.arrSkills = getEnvelopeData(objSkillsData) || []
 
         const objCertResponse = await fetch(`${strBaseURL}/api/certifications`)
         const objCertData = await objCertResponse.json()
-        objCoverLetterDataCache.arrCerts = objCertData.data || []
+        objCoverLetterDataCache.arrCerts = getEnvelopeData(objCertData) || []
 
         const objAwardResponse = await fetch(`${strBaseURL}/api/awards`)
         const objAwardData = await objAwardResponse.json()
-        objCoverLetterDataCache.arrAwards = objAwardData.data || []
+        objCoverLetterDataCache.arrAwards = getEnvelopeData(objAwardData) || []
 
         objCoverLetterDataCache.objDetailsByJobID = {}
         for (const objJob of objCoverLetterDataCache.arrJobs) {
             const objDetailResponse = await fetch(`${strBaseURL}/api/jobs/${objJob.JobID}/details`)
             const objDetailData = await objDetailResponse.json()
-            objCoverLetterDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data || []
+            objCoverLetterDataCache.objDetailsByJobID[objJob.JobID] = getEnvelopeData(objDetailData) || []
         }
 
         renderCoverLetterSelectionUI()
