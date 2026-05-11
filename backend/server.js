@@ -39,6 +39,54 @@ require('dotenv').config()
 const app = express()
 const PORT = 8000
 
+// Shared API response and validation help for predictable response (AI slightly assisted in formatting, I chose limits)
+const objFieldMaxLengths = {
+    strProfileName: 128,
+    strEmail: 256,
+    strPhone: 32,
+    strLocation: 128,
+    strURL: 256,
+    strJobTitle: 128,
+    strCompany: 128,
+    strDetail: 512,
+    strCategory: 100,
+    strSkill: 100,
+    strCertName: 128,
+    strIssuer: 128,
+    strAwardName: 128,
+    strAwardDescription: 650
+}
+
+// Centralized responses to make sure all endpoints return a much more consistent shape (success/message/data or error),
+// which theoretically makes frontend handling predictable and allowing changes to response format in one place without total chaos
+const sendSuccess = (res, intStatusCode, strMessage, objData = {}) => {
+    return res.status(intStatusCode).json({
+        success: true,
+        message: strMessage,
+        data: objData
+    })
+}
+
+const sendError = (res, intStatusCode, strMessage, objError = {}) => {
+    return res.status(intStatusCode).json({
+        success: false,
+        message: strMessage,
+        error: objError
+    })
+}
+
+// this safely trims any input without throwing on null or non-string values from req.body, superior to the previous way I was doing it
+const safeTrim = (objValue) => {
+    if (objValue === null || objValue === undefined) {
+        return ""
+    }
+    return String(objValue).trim()
+}
+
+// checks if a string's length is within a specified maximum limit.
+const isValidLength = (strValue, intMaxLength) => strValue.length <= intMaxLength
+
+
 // Middleware stuff
 app.use(cors())
 app.use(express.json())
@@ -57,7 +105,7 @@ const db = new sqlite3.Database('resume.db', (err) => {
 
 // This a route to test connection
 app.get('/ping', (req,res) => {
-    res.json({ message: 'Server is alive' })
+    return sendSuccess(res, 200, 'Server is alive', {})
 })
 
 // Serve frontend SPA from express
@@ -82,7 +130,7 @@ app.post('/api/profile', (req,res,next) => {
     const strWebsite = req.body.website ? req.body.website.trim() : ""
 
     if (!strFullName || !strEmail) {
-        return res.status(400).json({ message: "Full name and email are required" })
+            return sendError(res, 400, "Full name and email are required", { code: "VALIDATION_ERROR" })
     }
 
     const strCheckQuery = `SELECT ProfileID FROM tblProfile LIMIT 1`
@@ -90,11 +138,11 @@ app.post('/api/profile', (req,res,next) => {
     db.get(strCheckQuery, [], (err, objRow) => {
         if (err) {
             console.error("Error checking existing profile:", err.message)
-            return res.status(500).json({ message: "Failed to check profile" })
+            return sendError(res, 500, "Failed to check profile", { code: "SERVER_ERROR" })
         }
 
         if (objRow) {
-            return res.status(409).json({ message: "Profile already exists. Please edit profile instead." })
+            return sendError(res, 409, "Profile already exists. Please edit profile instead.", { code: "CONFLICT" })
         }
 
         const strInsertQuery = `INSERT INTO tblProfile (ProfileID, FullName, Email, Phone, Location, LinkedIn, GitHub, Website) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
@@ -102,12 +150,10 @@ app.post('/api/profile', (req,res,next) => {
         db.run(strInsertQuery, [strProfileID, strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite], (err) => {
             if (err) {
                 console.error("Error creating profile:", err.message)
-                return res.status(500).json({ message: "Failed to create profile" })
+                return sendError(res, 500, "Failed to create profile", { code: "SERVER_ERROR" })
             }
 
-            return res.status(201).json({
-                message: "Profile created successfully",
-                profile: {
+            const objProfile = {
                     ProfileID: strProfileID,
                     FullName: strFullName,
                     Email: strEmail,
@@ -117,10 +163,11 @@ app.post('/api/profile', (req,res,next) => {
                     GitHub: strGitHub,
                     Website: strWebsite
                 }
-            })
+            return sendSuccess(res, 201, "Profile created successfully", { profile: objProfile })
         })
     })
 })
+
 
 // GET profile
 app.get('/api/profile', (req,res,next) => {
@@ -136,10 +183,7 @@ app.get('/api/profile', (req,res,next) => {
             return res.status(404).json({ message: "Profile not found" })
         }
 
-        return res.status(200).json({
-            message: "Profile retrieved successfully",
-            profile: objRow
-        })
+        return sendSuccess(res, 200, "Profile retrieved successfully", { profile: objRow })
     })
 })
 
@@ -156,6 +200,12 @@ app.put('/api/profile/:id', (req,res,next) => {
 
     if (!strFullName || !strEmail) {
         return res.status(400).json({ message: "Full name and email are required" })
+        return sendError(res, 400, "Full name and email are required", { code: "VALIDATION_ERROR" })
+    }
+
+    // adding the new length validation defined at the top, ensuring the length doesn't exceed new limits
+    if (!isValidLength(strFullName, objFieldMaxLengths.strProfileName) || !isValidLength(strEmail, objFieldMaxLengths.strEmail)) {
+        return sendError(res, 400, "Profile field length is invalid", { code: "VALIDATION_ERROR" })
     }
 
     const strQuery = `UPDATE tblProfile SET FullName=?, Email=?, Phone=?, Location=?, LinkedIn=?, GitHub=?, Website=? WHERE ProfileID=?`
@@ -163,16 +213,14 @@ app.put('/api/profile/:id', (req,res,next) => {
     db.run(strQuery, [strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite, strProfileID], function (err) {
         if (err) {
             console.error("Error updating profile:", err.message)
-            return res.status(500).json({ message: "Failed to update profile" })
+            return sendError(res, 500, "Failed to update profile", { code: "SERVER_ERROR" })
         }
 
         if (this.changes === 0) {
-            return res.status(404).json({ message: "Profile not found" })
+            return sendError(res, 404, "Profile not found", { code: "NOT_FOUND" })
         }
 
-        return res.status(200).json({
-            message: "Profile updated successfully",
-            profile: {
+        const objProfile = {
                 ProfileID: strProfileID,
                 FullName: strFullName,
                 Email: strEmail,
@@ -182,7 +230,7 @@ app.put('/api/profile/:id', (req,res,next) => {
                 GitHub: strGitHub,
                 Website: strWebsite
             }
-        })
+        return sendSuccess(res, 200, "Profile updated successfully", { profile: objProfile })
     })
 })
 
@@ -193,10 +241,10 @@ app.put('/api/profile/:id', (req,res,next) => {
 // POST job route
 app.post('/api/jobs', (req,res,next) => {
     let strJobID = uuidv4()
-    let strTitle = req.body.title ? req.body.title.trim() : ""
-    let strCompany = req.body.company ? req.body.company.trim() : ""
-    let strStartDate = req.body.startDate ? req.body.startDate.trim() : ""
-    let strEndDate = req.body.endDate ? req.body.endDate.trim() : ""
+    let strTitle = safeTrim(req.body.title)
+    let strCompany = safeTrim(req.body.company)
+    let strStartDate = safeTrim(req.body.startDate)
+    let strEndDate = safeTrim(req.body.endDate)
     let blnIsPresent = req.body.isPresent === true
 
     if (blnIsPresent) {
@@ -205,7 +253,12 @@ app.post('/api/jobs', (req,res,next) => {
     
     // Lets validate the data
     if(!strJobID || !strTitle || !strCompany || !strStartDate || (!strEndDate && !blnIsPresent)){
-        return res.status(400).json({ message: "All fields are required" })
+        return sendError(res, 400, "All fields are required", { code: "VALIDATION_ERROR" })
+    }
+
+
+    if (!isValidLength(strTitle, objFieldMaxLengths.strJobTitle) || !isValidLength(strCompany, objFieldMaxLengths.strCompany)) {
+        return sendError(res, 400, "Job field length is invalid", { code: "VALIDATION_ERROR" })
     }
 
     const strQuery = `INSERT INTO tblJobs (JobID, Title, Company, StartDate, EndDate) VALUES (?, ?, ?, ?, ?)`
@@ -216,16 +269,14 @@ app.post('/api/jobs', (req,res,next) => {
             return res.status(500).json({ message:"Failed to create the job" })
         }
 
-        return res.status(201).json({ 
-            message:"Job created successfully!",
-            job: {
+        const objJob = {
                 JobID: strJobID,
                 Title: strTitle,
                 Company: strCompany,
                 StartDate: strStartDate,
                 EndDate: strEndDate
             }
-        })
+        return sendSuccess(res, 201, "Job created successfully!", { job: objJob })
     })
 })
 
@@ -237,26 +288,23 @@ app.get('/api/jobs', (req,res,next) => {
 
         if (err) {
             console.error("Error Fetching:", err.message)
-            return res.status(500).json({ message: "Failed to GET all jobs" })
+            return sendError(res, 500, "Failed to GET all jobs", { code: "SERVER_ERROR" })
         }
 
-        return res.status(200).json({
-            message: "Jobs retrieved successfully",
-            jobs: arrRows
-        })
+        return sendSuccess(res, 200, "Jobs retrieved successfully", { jobs: arrRows })
     })
 })
 
 // PUT to update job using a URL param
 app.put('/api/jobs/:id', (req,res,next) => {
     const strJobID = req.params.id
-    let strTitle = req.body.title ? req.body.title.trim() : ""
-    let strCompany = req.body.company ? req.body.company.trim() : ""
-    let strStartDate = req.body.startDate ? req.body.startDate.trim() : ""
-    let strEndDate = req.body.endDate ? req.body.endDate.trim() : ""
+    let strTitle = safeTrim(req.body.title)
+    let strCompany = safeTrim(req.body.company)
+    let strStartDate = safeTrim(req.body.startDate)
+    let strEndDate = safeTrim(req.body.endDate)
 
     if (!strTitle || !strCompany || !strStartDate || !strEndDate) {
-        return res.status(400).json({ message: "All fields are required" })
+        return sendError(res, 400, "All fields are required", { code: "VALIDATION_ERROR" })
     }
 
     const strQuery = `UPDATE tblJobs SET Title=?, Company=?, StartDate=?, EndDate=? WHERE JobID=?`
@@ -264,13 +312,11 @@ app.put('/api/jobs/:id', (req,res,next) => {
     db.run(strQuery, [strTitle, strCompany, strStartDate, strEndDate, strJobID], function (err) {
         if (err) {
             console.error("Error updating job:", err.message)
-            return res.status(500).json({ message: "Failed to update job" })
+            return sendError(res, 500, "Failed to update job", { code: "SERVER_ERROR" })
         }
-        if (this.changes === 0) return res.status(404).json({ message: "Job not found" })
+        if (this.changes === 0) return sendError(res, 404, "Job not found", { code: "NOT_FOUND" })
 
-        return res.status(200).json({ 
-            message: `Job with ID ${strJobID} updated successfully`
-        })
+        return sendSuccess(res, 200, `Job with ID ${strJobID} updated successfully`, {})
     })
 })
 
@@ -283,12 +329,10 @@ app.delete('/api/jobs/:id', (req,res,next) => {
     db.run(strQuery, [strJobID], function (err) {
         if (err) {
             console.error("Error deleting job:", err.message)
-            return res.status(500).json({ message: "Failed to delete job" })
+            return sendError(res, 500, "Failed to delete job", { code: "SERVER_ERROR" })
         }
-        if (this.changes === 0) return res.status(404).json({ message: "Job not found" })
-        return res.status(200).json({ 
-            message: `Job with ID ${strJobID} deleted successfully`
-        })
+        if (this.changes === 0) return sendError(res, 404, "Job not found", { code: "NOT_FOUND" })
+        return sendSuccess(res, 200, `Job with ID ${strJobID} deleted successfully`, {})
     })
 })
 
@@ -301,10 +345,14 @@ app.delete('/api/jobs/:id', (req,res,next) => {
 app.post('/api/jobs/:id/details', (req,res,next) => {
     const strDetailID = uuidv4()
     const strJobID = req.params.id
-    const strDetail = req.body.detail ? req.body.detail.trim() : ""
+    const strDetail = safeTrim(req.body.detail)
 
     if (!strDetail) {
-        return res.status(400).json({ message: "Detail text is required" })
+        return sendError(res, 400, "Detail text is required", { code: "VALIDATION_ERROR" })
+    }
+    
+    if (!isValidLength(strDetail, objFieldMaxLengths.strDetail)) {
+        return sendError(res, 400, "Detail text exceeds max length", { code: "VALIDATION_ERROR" })
     }
 
     const strQuery = `INSERT INTO tblJobDetails (DetailID, JobID, Detail) VALUES (?, ?, ?)`
@@ -312,12 +360,10 @@ app.post('/api/jobs/:id/details', (req,res,next) => {
     db.run(strQuery, [strDetailID, strJobID, strDetail], (err) => {
         if (err) {
             console.error("Error creating detail:", err.message)
-            return res.status(500).json({ message: "Failed to create detail" })
+            return sendError(res, 500, "Failed to create detail", { code: "SERVER_ERROR" })
         }
-        return res.status(201).json({
-            message: "Detail created successfully",
-            detail: { DetailID: strDetailID, JobID: strJobID, Detail: strDetail }
-        })
+        const objDetail = { DetailID: strDetailID, JobID: strJobID, Detail: strDetail }
+        return sendSuccess(res, 201, "Detail created successfully", { detail: objDetail })
     })
 })
 
@@ -331,12 +377,9 @@ app.get('/api/jobs/:id/details', (req,res,next) => {
     db.all(strQuery, [strJobID], (err, arrRows) => {
         if (err) {
             console.error("Error fetching the job details:", err.message)
-            return res.status(500).json({ message: "Failed to get the job details" })
+            return sendError(res, 500, "Failed to get the job details", { code: "SERVER_ERROR" })
         }
-        return res.status(200).json({
-            message: "Job details retrieved successfully",
-            data: arrRows
-        })
+        return sendSuccess(res, 200, "Job details retrieved successfully", { data: arrRows })
     })
 })
 
@@ -349,10 +392,10 @@ app.delete('/api/details/:id', (req,res,next) => {
     db.run(strQuery, [strDetailID], function (err) {
         if (err) {
             console.error("Error deleting detail:", err.message)
-            return res.status(500).json({ message: "Failed to delete detail" })
+            return sendError(res, 500, "Failed to delete detail", { code: "SERVER_ERROR" })
         }
-        if (this.changes === 0) return res.status(404).json({ message: "Detail not found" })
-        return res.status(200).json({ message: `Detail with ID ${strDetailID} deleted successfully` })
+        if (this.changes === 0) return sendError(res, 404, "Detail not found", { code: "NOT_FOUND" })
+        return sendSuccess(res, 200, `Detail with ID ${strDetailID} deleted successfully`, {})
     })
 })
 
@@ -363,10 +406,15 @@ app.delete('/api/details/:id', (req,res,next) => {
 // POST new skill category
 app.post('/api/skillcategories', (req,res,next) => {
     const strCategoryID = uuidv4()
-    const strName = req.body.name ? req.body.name.trim() : ""
+    const strName = safeTrim(req.body.name)
 
     if (!strName) {
-        return res.status(400).json({ message: "Category name is required" })
+        return sendError(res, 400, "Category name is required", { code: "VALIDATION_ERROR" })
+    }
+
+
+    if (!isValidLength(strName, objFieldMaxLengths.strCategory)) {
+        return sendError(res, 400, "Category name exceeds max length", { code: "VALIDATION_ERROR" })
     }
 
     const strQuery = `INSERT INTO tblSkillCategories (CategoryID, Name) VALUES (?, ?)`
@@ -374,12 +422,10 @@ app.post('/api/skillcategories', (req,res,next) => {
     db.run(strQuery, [strCategoryID, strName], (err) => {
         if (err) {
             console.error("Error creating skill category:", err.message)
-            return res.status(500).json({ message: "Failed to create skill category" })
+            return sendError(res, 500, "Failed to create skill category", { code: "SERVER_ERROR" })
         }
-        return res.status(201).json({
-            message: "Skill category created successfully",
-            category: { CategoryID: strCategoryID, Name: strName }
-        })
+        const objCategory = { CategoryID: strCategoryID, Name: strName }
+        return sendSuccess(res, 201, "Skill category created successfully", { category: objCategory })
     })
 })
 
@@ -390,12 +436,9 @@ app.get('/api/skillcategories', (req,res,next) => {
     db.all(strQuery, [], (err, arrRows) => {
         if (err) {
             console.error("Error fetching skill categories:", err.message)
-            return res.status(500).json({ message: "Failed to get skill categories" })
+            return sendError(res, 500, "Failed to get skill categories", { code: "SERVER_ERROR" })
         }
-        return res.status(200).json({
-            message: "Skill categories retreived successfully",
-            data: arrRows
-        })
+        return sendSuccess(res, 200, "Skill categories retreived successfully", { data: arrRows })
     })
 })
 
@@ -408,10 +451,10 @@ app.delete('/api/skillcategories/:id', (req,res,next) => {
     db.run(strQuery, [strCategoryID], function (err) {
         if (err) {
             console.error("Error deleting skill category:", err.message)
-            return res.status(500).json({ message: "Failed to delete skill category" })
+            return sendError(res, 500, "Failed to delete skill category", { code: "SERVER_ERROR" })
         }
-        if (this.changes === 0) return res.status(404).json({ message: "Skill category not found" })
-        return res.status(200).json({ message: `Skill category with ID ${strCategoryID} deleted successfully` })
+        if (this.changes === 0) return sendError(res, 404, "Skill category not found", { code: "NOT_FOUND" })
+        return sendSuccess(res, 200, `Skill category with ID ${strCategoryID} deleted successfully`, {})
     })
 })
 
@@ -422,11 +465,15 @@ app.delete('/api/skillcategories/:id', (req,res,next) => {
 // POST a new skill
 app.post('/api/skills', (req,res,next) => {
     const strSkillID = uuidv4()
-    const strCategoryID = req.body.categoryId ? req.body.categoryId.trim() : ""
-    const strName = req.body.name ? req.body.name.trim() : ""
+    const strCategoryID = safeTrim(req.body.categoryId)
+    const strName = safeTrim(req.body.name)
 
     if (!strCategoryID || !strName) {
-        return res.status(400).json({ message: "Category ID and skill name are required" })
+        return sendError(res, 400, "Category ID and skill name are required", { code: "VALIDATION_ERROR" })
+    }
+
+    if (!isValidLength(strName, objFieldMaxLengths.strSkill)) {
+        return sendError(res, 400, "Skill name exceeds max length", { code: "VALIDATION_ERROR" })
     }
 
     const strQuery = `INSERT INTO tblSkills (SkillID, CategoryID, Name) VALUES (?, ?, ?)`
@@ -434,12 +481,10 @@ app.post('/api/skills', (req,res,next) => {
     db.run(strQuery, [strSkillID, strCategoryID, strName], (err) => {
         if (err) {
             console.error("Error creating skill:", err.message)
-            return res.status(500).json({ message: "Failed to create skill" })
+            return sendError(res, 500, "Failed to create skill", { code: "SERVER_ERROR" })
         }
-        return res.status(201).json({
-            message: "Skill created successfully",
-            skill: { SkillID: strSkillID, CategoryID: strCategoryID, Name: strName }
-        })
+        const objSkill = { SkillID: strSkillID, CategoryID: strCategoryID, Name: strName }
+        return sendSuccess(res, 201, "Skill created successfully", { skill: objSkill })
     })
 })
 
@@ -460,12 +505,9 @@ app.get('/api/skills', (req,res,next) => {
     db.all(strQuery, arrParams, (err, arrRows) => {
         if (err) {
             console.error("Error fetching skills:", err.message)
-            return res.status(500).json({ message: "Failed to get skills" })
+            return sendError(res, 500, "Failed to get skills", { code: "SERVER_ERROR" })
         }
-        return res.status(200).json({
-            message: "Skills retreved successfully",
-            data: arrRows
-        })
+        return sendSuccess(res, 200, "Skills retreved successfully", { data: arrRows })
     })
 })
 
@@ -477,10 +519,10 @@ app.delete('/api/skills/:id', (req,res,next) => {
     db.run(strQuery, [strSkillID], function (err) {
         if (err) {
             console.error("Error deleting skill:", err.message)
-            return res.status(500).json({ message: "Failed to delete skill" })
+            return sendError(res, 500, "Failed to delete skill", { code: "SERVER_ERROR" })
         }
-        if (this.changes === 0) return res.status(404).json({ message: "Skill not found" })
-        return res.status(200).json({ message: `Skill with ID ${strSkillID} deleted successfully` })
+        if (this.changes === 0) return sendError(res, 404, "Skill not found", { code: "NOT_FOUND" })
+        return sendSuccess(res, 200, `Skill with ID ${strSkillID} deleted successfully`, {})
     })
 })
 
@@ -491,12 +533,12 @@ app.delete('/api/skills/:id', (req,res,next) => {
 // POST new certifications!
 app.post('/api/certifications', (req,res,next) => {
     const strCertID = uuidv4()
-    const strName = req.body.name ? req.body.name.trim() : ""
-    const strIssuer = req.body.issuer ? req.body.issuer.trim() : ""
-    const strDateEarned = req.body.dateEarned ? req.body.dateEarned.trim() : ""
+    const strName = safeTrim(req.body.name)
+    const strIssuer = safeTrim(req.body.issuer)
+    const strDateEarned = safeTrim(req.body.dateEarned)
 
     if (!strName || !strIssuer || !strDateEarned) {
-        return res.status(400).json({ message: "Name, issuer, and date earned are required" })
+        return sendError(res, 400, "Name, issuer, and date earned are required", { code: "VALIDATION_ERROR" })
     }
 
     const strQuery = `INSERT INTO tblCertifications (CertID, Name, Issuer, DateEarned) VALUES (?, ?, ?, ?)`
@@ -504,12 +546,10 @@ app.post('/api/certifications', (req,res,next) => {
     db.run(strQuery, [strCertID, strName, strIssuer, strDateEarned], (err) => {
         if (err) {
             console.error("Error creating certification:", err.message)
-            return res.status(500).json({ message: "Failed to create certification" })
+            return sendError(res, 500, "Failed to create certification", { code: "SERVER_ERROR" })
         }
-        return res.status(201).json({
-            message: "Certification created successfully",
-            certification: { CertID: strCertID, Name: strName, Issuer: strIssuer, DateEarned: strDateEarned }
-        })
+        const objCert = { CertID: strCertID, Name: strName, Issuer: strIssuer, DateEarned: strDateEarned }
+        return sendSuccess(res, 201, "Certification created successfully", { certification: objCert })
     })
 })
 
@@ -520,12 +560,9 @@ app.get('/api/certifications', (req,res,next) => {
     db.all(strQuery, [], (err, arrRows) => {
         if (err) {
             console.error("Error fetching certifications:", err.message)
-            return res.status(500).json({ message: "Failed to get certifications" })
+            return sendError(res, 500, "Failed to get certifications", { code: "SERVER_ERROR" })
         }
-        return res.status(200).json({
-            message: "Certifications retreived successfully",
-            data: arrRows
-        })
+        return sendSuccess(res, 200, "Certifications retreived successfully", { data: arrRows })
     })
 })
 
@@ -537,10 +574,10 @@ app.delete('/api/certifications/:id', (req,res,next) => {
     db.run(strQuery, [strCertID], function (err) {
         if (err) {
             console.error("Error deleting certification:", err.message)
-            return res.status(500).json({ message: "Failed to delete certification" })
+            return sendError(res, 500, "Failed to delete certification", { code: "SERVER_ERROR" })
         }
-        if (this.changes === 0) return res.status(404).json({ message: "Certification not found" })
-        return res.status(200).json({ message: `Certification with ID ${strCertID} deleted successfully` })
+        if (this.changes === 0) return sendError(res, 404, "Certification not found", { code: "NOT_FOUND" })
+        return sendSuccess(res, 200, `Certification with ID ${strCertID} deleted successfully`, {})
     })
 })
 
@@ -551,13 +588,13 @@ app.delete('/api/certifications/:id', (req,res,next) => {
 // POST new award
 app.post('/api/awards', (req,res,next) => {
     const strAwardID = uuidv4()
-    const strName = req.body.name ? req.body.name.trim() : ""
-    const strIssuer = req.body.issuer ? req.body.issuer.trim() : ""
-    const strDateEarned = req.body.dateEarned ? req.body.dateEarned.trim() : ""
-    const strDescription = req.body.description ? req.body.description.trim() : ""
+    const strName = safeTrim(req.body.name)
+    const strIssuer = safeTrim(req.body.issuer)
+    const strDateEarned = safeTrim(req.body.dateEarned)
+    const strDescription = safeTrim(req.body.description)
 
     if (!strName || !strDateEarned) {
-        return res.status(400).json({ message: "Name and date earned are required" })
+        return sendError(res, 400, "Name and date earned are required", { code: "VALIDATION_ERROR" })
     }
 
     const strQuery = `INSERT INTO tblAwards (AwardID, Name, Issuer, DateEarned, Description) VALUES (?, ?, ?, ?, ?)`
@@ -565,14 +602,13 @@ app.post('/api/awards', (req,res,next) => {
     db.run(strQuery, [strAwardID, strName, strIssuer, strDateEarned, strDescription], (err) => {
         if (err) {
             console.error("Error creating award:", err.message)
-            return res.status(500).json({ message: "Failed to create award" })
+            return sendError(res, 500, "Failed to create award", { code: "SERVER_ERROR" })
         }
-        return res.status(201).json({
-            message: "Award created successfully",
-            award: { AwardID: strAwardID, Name: strName, Issuer: strIssuer, DateEarned: strDateEarned, Description: strDescription }
-        })
+        const objAward = { AwardID: strAwardID, Name: strName, Issuer: strIssuer, DateEarned: strDateEarned, Description: strDescription }
+        return sendSuccess(res, 201, "Award created successfully", { award: objAward })
     })
 })
+
 
 // GET all awards
 app.get('/api/awards', (req,res,next) => {
@@ -581,12 +617,9 @@ app.get('/api/awards', (req,res,next) => {
     db.all(strQuery, [], (err, arrRows) => {
         if (err) {
             console.error("Error fetching awards:", err.message)
-            return res.status(500).json({ message: "Failed to get awards" })
+            return sendError(res, 500, "Failed to get awards", { code: "SERVER_ERROR" })
         }
-        return res.status(200).json({
-            message: "Awards retrieved successfully",
-            data: arrRows
-        })
+        return sendSuccess(res, 200, "Awards retrieved successfully", { data: arrRows })
     })
 })
 
@@ -599,10 +632,10 @@ app.delete('/api/awards/:id', (req,res,next) => {
     db.run(strQuery, [strAwardID], function (err) {
         if (err) {
             console.error("Error deleting award:", err.message)
-            return res.status(500).json({ message: "Failed to delete award" })
+            return sendError(res, 500, "Failed to delete award", { code: "SERVER_ERROR" })
         }
-        if (this.changes === 0) return res.status(404).json({ message: "Award not found" })
-        return res.status(200).json({ message: `Award with ID ${strAwardID} deleted successfully` })
+        if (this.changes === 0) return sendError(res, 404, "Award not found", { code: "NOT_FOUND" })
+        return sendSuccess(res, 200, `Award with ID ${strAwardID} deleted successfully`, {})
     })
 })
 
@@ -717,6 +750,7 @@ app.get('/api/ai/config', (req,res,next) => {
 
 // AI assisted: first Gemini endpoint for polishing existing bullet details.
 app.post('/api/ai/improve-bullet', async (req,res,next) => {
+    // Keeping these routes the same because I fear they're more finicky, and prone to breakage, especially since AI largely helped in their creation
     const strDetail = req.body.detail ? req.body.detail.trim() : ""
     const strJobTitle = req.body.jobTitle ? req.body.jobTitle.trim() : ""
     const strCompany = req.body.company ? req.body.company.trim() : ""
