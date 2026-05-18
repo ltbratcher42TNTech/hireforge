@@ -31,6 +31,7 @@
                 <button class="btn btn-primary me-2" id="btnNavSkills">Skills</button>
                 <button class="btn btn-primary me-2" id="btnNavCerts">Certifications</button>
                 <button class="btn btn-primary me-2" id="btnNavAwards">Awards</button>
+                <button class="btn btn-primary me-2" id="btnNavSummary">Summary</button>
                 <button class="btn btn-primary me-2" id="btnNavResume">Resume</button>
                 <button class="btn btn-primary me-2" id="btnNavCoverLetter">Cover Letter</button>
                 <button class="btn btn-primary me-2" id="btnNavThankYou">Thank You</button>
@@ -155,6 +156,16 @@
                 <div id="divAwards"></div>
             </div>
 
+            <!-- Professional Summary -->
+            <div id="summarySection" style="display:none;">
+                <h3>Professional Summary</h3>
+                <div class="card p-3 mb-3">
+                    <textarea id="txtSummaryContent" class="form-control mb-2" rows="5" placeholder="Write your professional summary here..." aria-label="Professional Summary"></textarea>
+                    <button class="btn btn-success" id="btnSaveSummary">Save Summary</button>
+                </div>
+                <p id="pSummaryStatus" class="text-muted" aria-live="polite"></p>
+            </div>
+
 
             <!-- Resume -->
             <div id="resumeSection" style="display:none;">
@@ -164,6 +175,11 @@
                         <div class="card p-3 mb-3">
                             <h5>Select Profile Fields</h5>
                             <div id="divResumeProfileFields"></div>
+                        </div>
+
+                        <div class="card p-3 mb-3">
+                            <h5>Include Professional Summary</h5>
+                            <div id="divResumeSummary"></div>
                         </div>
 
                         <div class="card p-3 mb-3">
