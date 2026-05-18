@@ -1182,22 +1182,6 @@ const generateResumePreview = () => {
 
     let strHTML = ''
 
-    if (arrSelectedCerts.length) {
-        strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
-        arrSelectedCerts.forEach((objCert) => {
-            strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`
-        })
-        strHTML += '</ul></section>'
-    }
-
-    if (arrSelectedAwards.length) {
-        strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
-        arrSelectedAwards.forEach((objAward) => {
-            strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
-        })
-        strHTML += '</ul></section>'
-    }
-
     if (objProfile) {
         strHTML += '<section>'
         if (arrSelectedProfileFields.includes('FullName') && objProfile.FullName) {
