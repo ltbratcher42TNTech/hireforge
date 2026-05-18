@@ -140,4 +140,18 @@ body {
     h1 {
         display: none !important;
     }
+
+    .resume-preview {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .resume-preview-section:last-child {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
 }

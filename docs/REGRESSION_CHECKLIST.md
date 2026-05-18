@@ -83,3 +83,4 @@ Run before merging or deploying.
 ---
 
 # Bugs (added as appeared)
+- [ ] When a resume is generated, it (sometimes) seems to create a new blank page. Not sure how to fix it yet, but it's purely cosmetic and the easy workaround is to just ignore the blank page or delete it when you download a PDF.

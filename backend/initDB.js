@@ -116,6 +116,17 @@ db.serialize(() => {
     `
     db.run(strQuery)
 
+    // =====================================================
+    // SUMMARY
+    // =====================================================
+    strQuery = `
+        CREATE TABLE IF NOT EXISTS tblSummary (
+            SummaryID TEXT PRIMARY KEY,
+            Content TEXT NOT NULL
+        )
+    `
+    db.run(strQuery)
+
     console.log("All tables created successfully if they didn't exist.")
 })
 
