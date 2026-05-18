@@ -13,6 +13,7 @@ const showSection = (strSectionName) => {
     document.getElementById('skillsSection').style.display = 'none'
     document.getElementById('certsSection').style.display = 'none'
     document.getElementById('awardsSection').style.display = 'none'
+    document.getElementById('summarySection').style.display = 'none'
     document.getElementById('resumeSection').style.display = 'none'
     document.getElementById('coverLetterSection').style.display = 'none'
     document.getElementById('thankYouSection').style.display = 'none'
@@ -50,6 +51,11 @@ document.querySelector('#btnNavAwards').addEventListener('click', () => {
     loadAwards()
 })
 
+document.querySelector('#btnNavSummary').addEventListener('click', () => {
+    showSection('summary')
+    loadSummary()
+})
+
 document.querySelector('#btnNavResume').addEventListener('click', () => {
     showSection('resume')
     loadResumeBuilderData()
@@ -78,6 +84,7 @@ let strCurrentJobCompany = ''
 
 const objResumeDataCache = {
     objProfile: null,
+    objSummary: null,
     arrJobs: [],
     arrCategories: [],
     arrSkills: [],
@@ -125,7 +132,11 @@ const loadProfile = async () => {
         return
     }
 
-    const objProfile = objData.profile
+    const objProfile = objData.data && objData.data.profile ? objData.data.profile : null
+    if (!objProfile) {
+        alert('Profile data is missing from server response.')
+        return
+    }
     strCurrentProfileID = objProfile.ProfileID
 
     document.querySelector('#txtFullName').value = objProfile.FullName || ''
@@ -205,7 +216,17 @@ document.querySelector('#btnSaveProfile').addEventListener('click', async () => 
         return
     }
 
-    strCurrentProfileID = objData.profile.ProfileID
+    // AI helped write this, basically helps handle missing data gracefully so it doesn't break. 
+    // The commented out code was MUCH more brittle and could cause issues like crashes
+    
+    // strCurrentProfileID = objData.profile.ProfileID
+
+    const objSavedProfile = objData.data && objData.data.profile ? objData.data.profile : null
+    if (!objSavedProfile) {
+        alert('Profile data is missing from server response.')
+        return
+    }
+    strCurrentProfileID = objSavedProfile.ProfileID
     document.querySelector('#pProfileStatus').innerText = 'Profile saved successfully.'
 })
 
@@ -216,7 +237,10 @@ document.querySelector('#btnSaveProfile').addEventListener('click', async () => 
 const loadJobs = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/jobs`)
     const objData = await objResponse.json()
-    const arrJobs = objData.jobs
+    // Same thing here, old code could crash, AI recommended this since it handles missing data gracefullt
+    // const arrJobs = objData.jobs
+
+    const arrJobs = objData.data && objData.data.jobs ? objData.data.jobs : []
 
     const divJobs = document.querySelector('#divJobs')
     divJobs.innerHTML = ''
@@ -245,7 +269,7 @@ const loadDetails = async (strJobID) => {
     console.log('loadDetails called with:', strJobID)
     const objResponse = await fetch(`${strBaseURL}/api/jobs/${strJobID}/details`)
     const objData = await objResponse.json()
-    const arrDetails = objData.data
+    const arrDetails = objData.data && objData.data.details ? objData.data.details : []
     console.log(arrDetails)
 
     const divDetailList = document.querySelector('#divDetailList')
@@ -486,7 +510,7 @@ let strCurrentCategoryID = ''
 const loadCategories = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/skillcategories`)
     const objData = await objResponse.json()
-    const arrCategories = objData.data
+    const arrCategories = objData.data && objData.data.categories ? objData.data.categories : []
 
     const divCategories = document.querySelector('#divCategories')
     divCategories.innerHTML = ''
@@ -504,7 +528,7 @@ const loadCategories = async () => {
 const loadSkills = async (strCategoryID) => {
     const objResponse = await fetch(`${strBaseURL}/api/skills?categoryId=${strCategoryID}`)
     const objData = await objResponse.json()
-    const arrSkills = objData.data
+    const arrSkills = objData.data && objData.data.skills ? objData.data.skills : []
 
     const divSkillList = document.querySelector('#divSkillList')
     divSkillList.innerHTML = ''
@@ -634,7 +658,7 @@ document.querySelector('#btnAddSkill').addEventListener('click', async function(
 const loadCerts = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/certifications`)
     const objData = await objResponse.json()
-    const arrCerts = objData.data
+    const arrCerts = objData.data && objData.data.certifications ? objData.data.certifications : []
 
     const divCerts = document.querySelector('#divCerts')
     divCerts.innerHTML = ''
@@ -722,7 +746,7 @@ document.querySelector('#btnAddCert').addEventListener('click', async function()
 const loadAwards = async () => {
     const objResponse = await fetch(`${strBaseURL}/api/awards`)
     const objData = await objResponse.json()
-    const arrAwards = objData.data
+    const arrAwards = objData.data && objData.data.awards ? objData.data.awards : []
 
     const divAwards = document.querySelector('#divAwards')
     divAwards.innerHTML = ''
@@ -823,6 +847,79 @@ document.querySelector('#btnClearGeminiKey').addEventListener('click', function(
     document.querySelector('#pGeminiKeyStatus').innerText = 'Saved Gemini key cleared.'
 })
 
+
+// ===================================================
+// Summary
+// ===================================================
+
+// Disclosure, I was aided in this creation with AI
+let strCurrentSummaryID = ''
+
+const loadSummary = async () => {
+    const objResponse = await fetch(`${strBaseURL}/api/summary`)
+
+    if (objResponse.status === 404) {
+        document.querySelector('#txtSummaryContent').value = ''
+        document.querySelector('#pSummaryStatus').innerText = 'No summary saved yet.'
+        strCurrentSummaryID = ''
+        return
+    }
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200) {
+        alert(objData.message)
+        return
+    }
+
+    const objSummary = objData.data && objData.data.summary ? objData.data.summary : null
+    if (!objSummary) {
+        alert('Summary data is missing from server response.')
+        return
+    }
+
+    strCurrentSummaryID = objSummary.SummaryID
+    document.querySelector('#txtSummaryContent').value = objSummary.Content || ''
+    document.querySelector('#pSummaryStatus').innerText = 'Summary loaded.'
+}
+
+document.querySelector('#btnSaveSummary').addEventListener('click', async () => {
+    const strContent = document.querySelector('#txtSummaryContent').value.trim()
+
+    if (!strContent) {
+        alert('Summary content is required.')
+        return
+    }
+
+    let strURL = `${strBaseURL}/api/summary`
+    let strMethod = 'POST'
+
+    if (strCurrentSummaryID) {
+        strMethod = 'PUT'
+    }
+
+    const objResponse = await fetch(strURL, {
+        method: strMethod,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: strContent })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200 && objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    const objSavedSummary = objData.data && objData.data.summary ? objData.data.summary : null
+    if (objSavedSummary && objSavedSummary.SummaryID) {
+        strCurrentSummaryID = objSavedSummary.SummaryID
+    }
+
+    document.querySelector('#pSummaryStatus').innerText = 'Summary saved successfully.'
+})
+
+
 // ===================================================================
 // Resume Builder (This part was almost entirely AI generated)
 // ===================================================================
@@ -862,36 +959,44 @@ const loadResumeBuilderData = async () => {
         const objProfileResponse = await fetch(`${strBaseURL}/api/profile`)
         if (objProfileResponse.status === 200) {
             const objProfileData = await objProfileResponse.json()
-            objResumeDataCache.objProfile = objProfileData.profile || null
+            objResumeDataCache.objProfile = objProfileData.data && objProfileData.data.profile ? objProfileData.data.profile : null
         } else {
             objResumeDataCache.objProfile = null
         }
 
+        const objSummaryResponse = await fetch(`${strBaseURL}/api/summary`)
+        if (objSummaryResponse.status === 200) {
+            const objSummaryData = await objSummaryResponse.json()
+            objResumeDataCache.objSummary = objSummaryData.data && objSummaryData.data.summary ? objSummaryData.data.summary : null
+        } else {
+            objResumeDataCache.objSummary = null
+}
+
         const objJobsResponse = await fetch(`${strBaseURL}/api/jobs`)
         const objJobsData = await objJobsResponse.json()
-        objResumeDataCache.arrJobs = objJobsData.jobs || []
+        objResumeDataCache.arrJobs = objJobsData.data && objJobsData.data.jobs ? objJobsData.data.jobs : []
 
         const objCategoryResponse = await fetch(`${strBaseURL}/api/skillcategories`)
         const objCategoryData = await objCategoryResponse.json()
-        objResumeDataCache.arrCategories = objCategoryData.data || []
+        objResumeDataCache.arrCategories = objCategoryData.data && objCategoryData.data.categories ? objCategoryData.data.categories : []
 
         const objSkillsResponse = await fetch(`${strBaseURL}/api/skills`)
         const objSkillsData = await objSkillsResponse.json()
-        objResumeDataCache.arrSkills = objSkillsData.data || []
+        objResumeDataCache.arrSkills = objSkillsData.data && objSkillsData.data.skills ? objSkillsData.data.skills : []
 
         const objCertResponse = await fetch(`${strBaseURL}/api/certifications`)
         const objCertData = await objCertResponse.json()
-        objResumeDataCache.arrCerts = objCertData.data || []
+        objResumeDataCache.arrCerts = objCertData.data && objCertData.data.certifications ? objCertData.data.certifications : []
 
         const objAwardResponse = await fetch(`${strBaseURL}/api/awards`)
         const objAwardData = await objAwardResponse.json()
-        objResumeDataCache.arrAwards = objAwardData.data || []
+        objResumeDataCache.arrAwards = objAwardData.data && objAwardData.data.awards ? objAwardData.data.awards : []
 
         objResumeDataCache.objDetailsByJobID = {}
         for (const objJob of objResumeDataCache.arrJobs) {
             const objDetailResponse = await fetch(`${strBaseURL}/api/jobs/${objJob.JobID}/details`)
             const objDetailData = await objDetailResponse.json()
-            objResumeDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data || []
+            objResumeDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data && objDetailData.data.details ? objDetailData.data.details : []
         }
 
         renderResumeSelectionUI()
@@ -903,11 +1008,31 @@ const loadResumeBuilderData = async () => {
 }
 
 const renderResumeSelectionUI = () => {
+    renderResumeSummarySelection()
     renderResumeProfileSelection()
     renderResumeJobsSelection()
     renderResumeSkillsSelection()
     renderResumeCertSelection()
     renderResumeAwardSelection()
+}
+
+const renderResumeSummarySelection = () => {
+    const divResumeSummary = document.querySelector('#divResumeSummary')
+    const objSummary = objResumeDataCache.objSummary
+
+    if (!objSummary || !objSummary.Content) {
+        divResumeSummary.innerHTML = '<p class="text-muted mb-0">No summary saved yet.</p>'
+        return
+    }
+
+    divResumeSummary.innerHTML = `
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="chkResumeSummary" checked aria-label="Include professional summary">
+            <label class="form-check-label" for="chkResumeSummary">
+                ${objSummary.Content.substring(0, 80)}${objSummary.Content.length > 80 ? '...' : ''}
+            </label>
+        </div>
+    `
 }
 
 const renderResumeProfileSelection = () => {
@@ -1057,6 +1182,22 @@ const generateResumePreview = () => {
 
     let strHTML = ''
 
+    if (arrSelectedCerts.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
+        arrSelectedCerts.forEach((objCert) => {
+            strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`
+        })
+        strHTML += '</ul></section>'
+    }
+
+    if (arrSelectedAwards.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
+        arrSelectedAwards.forEach((objAward) => {
+            strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
+        })
+        strHTML += '</ul></section>'
+    }
+
     if (objProfile) {
         strHTML += '<section>'
         if (arrSelectedProfileFields.includes('FullName') && objProfile.FullName) {
@@ -1074,7 +1215,16 @@ const generateResumePreview = () => {
         strHTML += '</section>'
     }
 
-
+    // Summary
+    const blnIncludeSummary = document.querySelector('#chkResumeSummary') && document.querySelector('#chkResumeSummary').checked
+    if (blnIncludeSummary && objResumeDataCache.objSummary && objResumeDataCache.objSummary.Content) {
+        strHTML += `
+            <section class="resume-preview-section">
+                <h3>Professional Summary</h3>
+                <p>${objResumeDataCache.objSummary.Content}</p>
+            </section>
+        `
+    }
 
     strHTML += '<section class="resume-preview-section"><h3>Experience</h3>'
     const arrJobs = objResumeDataCache.arrJobs.filter((objJob) => arrSelectedJobs.includes(objJob.JobID))
@@ -1187,36 +1337,36 @@ const loadCoverLetterData = async () => {
         const objProfileResponse = await fetch(`${strBaseURL}/api/profile`)
         if (objProfileResponse.status === 200) {
             const objProfileData = await objProfileResponse.json()
-            objCoverLetterDataCache.objProfile = objProfileData.profile || null
+            objCoverLetterDataCache.objProfile = objProfileData.data && objProfileData.data.profile ? objProfileData.data.profile : null
         } else {
             objCoverLetterDataCache.objProfile = null
         }
 
         const objJobsResponse = await fetch(`${strBaseURL}/api/jobs`)
         const objJobsData = await objJobsResponse.json()
-        objCoverLetterDataCache.arrJobs = objJobsData.jobs || []
+        objCoverLetterDataCache.arrJobs = objJobsData.data && objJobsData.data.jobs ? objJobsData.data.jobs : []
 
         const objCategoryResponse = await fetch(`${strBaseURL}/api/skillcategories`)
         const objCategoryData = await objCategoryResponse.json()
-        objCoverLetterDataCache.arrCategories = objCategoryData.data || []
+        objCoverLetterDataCache.arrCategories = objCategoryData.data && objCategoryData.data.categories ? objCategoryData.data.categories : []
 
         const objSkillsResponse = await fetch(`${strBaseURL}/api/skills`)
         const objSkillsData = await objSkillsResponse.json()
-        objCoverLetterDataCache.arrSkills = objSkillsData.data || []
+        objCoverLetterDataCache.arrSkills = objSkillsData.data && objSkillsData.data.skills ? objSkillsData.data.skills : []
 
         const objCertResponse = await fetch(`${strBaseURL}/api/certifications`)
         const objCertData = await objCertResponse.json()
-        objCoverLetterDataCache.arrCerts = objCertData.data || []
+        objCoverLetterDataCache.arrCerts = objCertData.data && objCertData.data.certifications ? objCertData.data.certifications : []
 
         const objAwardResponse = await fetch(`${strBaseURL}/api/awards`)
         const objAwardData = await objAwardResponse.json()
-        objCoverLetterDataCache.arrAwards = objAwardData.data || []
+        objCoverLetterDataCache.arrAwards = objAwardData.data && objAwardData.data.awards ? objAwardData.data.awards : []
 
         objCoverLetterDataCache.objDetailsByJobID = {}
         for (const objJob of objCoverLetterDataCache.arrJobs) {
             const objDetailResponse = await fetch(`${strBaseURL}/api/jobs/${objJob.JobID}/details`)
             const objDetailData = await objDetailResponse.json()
-            objCoverLetterDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data || []
+            objCoverLetterDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data && objDetailData.data.details ? objDetailData.data.details : []
         }
 
         renderCoverLetterSelectionUI()
