@@ -13,6 +13,7 @@ const showSection = (strSectionName) => {
     document.getElementById('skillsSection').style.display = 'none'
     document.getElementById('certsSection').style.display = 'none'
     document.getElementById('awardsSection').style.display = 'none'
+    document.getElementById('summarySection').style.display = 'none'
     document.getElementById('resumeSection').style.display = 'none'
     document.getElementById('coverLetterSection').style.display = 'none'
     document.getElementById('thankYouSection').style.display = 'none'
@@ -50,6 +51,11 @@ document.querySelector('#btnNavAwards').addEventListener('click', () => {
     loadAwards()
 })
 
+document.querySelector('#btnNavSummary').addEventListener('click', () => {
+    showSection('summary')
+    loadSummary()
+})
+
 document.querySelector('#btnNavResume').addEventListener('click', () => {
     showSection('resume')
     loadResumeBuilderData()
@@ -78,6 +84,7 @@ let strCurrentJobCompany = ''
 
 const objResumeDataCache = {
     objProfile: null,
+    objSummary: null,
     arrJobs: [],
     arrCategories: [],
     arrSkills: [],
@@ -840,6 +847,79 @@ document.querySelector('#btnClearGeminiKey').addEventListener('click', function(
     document.querySelector('#pGeminiKeyStatus').innerText = 'Saved Gemini key cleared.'
 })
 
+
+// ===================================================
+// Summary
+// ===================================================
+
+// Disclosure, I was aided in this creation with AI
+let strCurrentSummaryID = ''
+
+const loadSummary = async () => {
+    const objResponse = await fetch(`${strBaseURL}/api/summary`)
+
+    if (objResponse.status === 404) {
+        document.querySelector('#txtSummaryContent').value = ''
+        document.querySelector('#pSummaryStatus').innerText = 'No summary saved yet.'
+        strCurrentSummaryID = ''
+        return
+    }
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200) {
+        alert(objData.message)
+        return
+    }
+
+    const objSummary = objData.data && objData.data.summary ? objData.data.summary : null
+    if (!objSummary) {
+        alert('Summary data is missing from server response.')
+        return
+    }
+
+    strCurrentSummaryID = objSummary.SummaryID
+    document.querySelector('#txtSummaryContent').value = objSummary.Content || ''
+    document.querySelector('#pSummaryStatus').innerText = 'Summary loaded.'
+}
+
+document.querySelector('#btnSaveSummary').addEventListener('click', async () => {
+    const strContent = document.querySelector('#txtSummaryContent').value.trim()
+
+    if (!strContent) {
+        alert('Summary content is required.')
+        return
+    }
+
+    let strURL = `${strBaseURL}/api/summary`
+    let strMethod = 'POST'
+
+    if (strCurrentSummaryID) {
+        strMethod = 'PUT'
+    }
+
+    const objResponse = await fetch(strURL, {
+        method: strMethod,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: strContent })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200 && objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    const objSavedSummary = objData.data && objData.data.summary ? objData.data.summary : null
+    if (objSavedSummary && objSavedSummary.SummaryID) {
+        strCurrentSummaryID = objSavedSummary.SummaryID
+    }
+
+    document.querySelector('#pSummaryStatus').innerText = 'Summary saved successfully.'
+})
+
+
 // ===================================================================
 // Resume Builder (This part was almost entirely AI generated)
 // ===================================================================
@@ -884,6 +964,14 @@ const loadResumeBuilderData = async () => {
             objResumeDataCache.objProfile = null
         }
 
+        const objSummaryResponse = await fetch(`${strBaseURL}/api/summary`)
+        if (objSummaryResponse.status === 200) {
+            const objSummaryData = await objSummaryResponse.json()
+            objResumeDataCache.objSummary = objSummaryData.data && objSummaryData.data.summary ? objSummaryData.data.summary : null
+        } else {
+            objResumeDataCache.objSummary = null
+}
+
         const objJobsResponse = await fetch(`${strBaseURL}/api/jobs`)
         const objJobsData = await objJobsResponse.json()
         objResumeDataCache.arrJobs = objJobsData.data && objJobsData.data.jobs ? objJobsData.data.jobs : []
@@ -920,11 +1008,31 @@ const loadResumeBuilderData = async () => {
 }
 
 const renderResumeSelectionUI = () => {
+    renderResumeSummarySelection()
     renderResumeProfileSelection()
     renderResumeJobsSelection()
     renderResumeSkillsSelection()
     renderResumeCertSelection()
     renderResumeAwardSelection()
+}
+
+const renderResumeSummarySelection = () => {
+    const divResumeSummary = document.querySelector('#divResumeSummary')
+    const objSummary = objResumeDataCache.objSummary
+
+    if (!objSummary || !objSummary.Content) {
+        divResumeSummary.innerHTML = '<p class="text-muted mb-0">No summary saved yet.</p>'
+        return
+    }
+
+    divResumeSummary.innerHTML = `
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="chkResumeSummary" checked aria-label="Include professional summary">
+            <label class="form-check-label" for="chkResumeSummary">
+                ${objSummary.Content.substring(0, 80)}${objSummary.Content.length > 80 ? '...' : ''}
+            </label>
+        </div>
+    `
 }
 
 const renderResumeProfileSelection = () => {
@@ -1074,6 +1182,22 @@ const generateResumePreview = () => {
 
     let strHTML = ''
 
+    if (arrSelectedCerts.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
+        arrSelectedCerts.forEach((objCert) => {
+            strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`
+        })
+        strHTML += '</ul></section>'
+    }
+
+    if (arrSelectedAwards.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
+        arrSelectedAwards.forEach((objAward) => {
+            strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
+        })
+        strHTML += '</ul></section>'
+    }
+
     if (objProfile) {
         strHTML += '<section>'
         if (arrSelectedProfileFields.includes('FullName') && objProfile.FullName) {
@@ -1091,7 +1215,16 @@ const generateResumePreview = () => {
         strHTML += '</section>'
     }
 
-
+    // Summary
+    const blnIncludeSummary = document.querySelector('#chkResumeSummary') && document.querySelector('#chkResumeSummary').checked
+    if (blnIncludeSummary && objResumeDataCache.objSummary && objResumeDataCache.objSummary.Content) {
+        strHTML += `
+            <section class="resume-preview-section">
+                <h3>Professional Summary</h3>
+                <p>${objResumeDataCache.objSummary.Content}</p>
+            </section>
+        `
+    }
 
     strHTML += '<section class="resume-preview-section"><h3>Experience</h3>'
     const arrJobs = objResumeDataCache.arrJobs.filter((objJob) => arrSelectedJobs.includes(objJob.JobID))
