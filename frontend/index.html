@@ -28,6 +28,7 @@
                 <button class="btn btn-primary me-2" id="btnNavDashboard">Dashboard</button>
                 <button class="btn btn-primary me-2" id="btnNavProfile">Profile</button>
                 <button class="btn btn-primary me-2" id="btnNavJobs">Jobs</button>
+                <button class="btn btn-primary me-2" id="btnNavEducation">Education</button>
                 <button class="btn btn-primary me-2" id="btnNavSkills">Skills</button>
                 <button class="btn btn-primary me-2" id="btnNavCerts">Certifications</button>
                 <button class="btn btn-primary me-2" id="btnNavAwards">Awards</button>
@@ -102,6 +103,25 @@
                 </div>
             </div>
 
+
+            <!-- Education -->
+            <div id="educationSection" style="display:none;">
+                <h3>Education</h3>
+                <div class="card p-3 mb-3">
+                    <input type="text" id="txtInstitution" class="form-control mb-2" placeholder="Institution" aria-label="Institution">
+                    <input type="text" id="txtDegree" class="form-control mb-2" placeholder="Degree (e.g. Bachelor of Science)" aria-label="Degree">
+                    <input type="text" id="txtFieldOfStudy" class="form-control mb-2" placeholder="Field of Study" aria-label="Field of Study">
+                    <input type="date" id="txtEduStartDate" class="form-control mb-2" aria-label="Start Date">
+                    <input type="date" id="txtEduEndDate" class="form-control mb-2" aria-label="End Date">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="chkEduPresent" aria-label="Currently enrolled">
+                        <label class="form-check-label" for="chkEduPresent">Present (currently enrolled)</label>
+                    </div>
+                    <input type="text" id="txtGPA" class="form-control mb-2" placeholder="GPA (optional)" aria-label="GPA">
+                    <button class="btn btn-success" id="btnAddEducation">Add Education</button>
+                </div>
+                <div id="divEducation"></div>
+            </div>
 
             <!-- Skills -->
             <div id="skillsSection" style="display:none">
@@ -180,6 +200,11 @@
                         <div class="card p-3 mb-3">
                             <h5>Include Professional Summary</h5>
                             <div id="divResumeSummary"></div>
+                        </div>
+
+                        <div class="card p-3 mb-3">
+                            <h5>Select Education</h5>
+                            <div id="divResumeEducation"></div>
                         </div>
 
                         <div class="card p-3 mb-3">
