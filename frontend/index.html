@@ -121,6 +121,25 @@
                     <button class="btn btn-success" id="btnAddEducation">Add Education</button>
                 </div>
                 <div id="divEducation"></div>
+
+                <!-- Edit view -->
+                <div id="divEducationEditView" style="display:none;">
+                    <button class="btn btn-secondary mb-3" id="btnBackToEducation">Back</button>
+                    <h4 id="txtSelectedEducation"></h4>
+                    <div class="card p-3 mb-3">
+                        <input type="text" id="txtEditInstitution" class="form-control mb-2" placeholder="Institution" aria-label="Edit Institution">
+                        <input type="text" id="txtEditDegree" class="form-control mb-2" placeholder="Degree (e.g. Bachelor of Science)" aria-label="Edit Degree">
+                        <input type="text" id="txtEditFieldOfStudy" class="form-control mb-2" placeholder="Field of Study" aria-label="Edit Field of Study">
+                        <input type="date" id="txtEditEduStartDate" class="form-control mb-2" aria-label="Edit Start Date">
+                        <input type="date" id="txtEditEduEndDate" class="form-control mb-2" aria-label="Edit End Date">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="chkEditEduPresent" aria-label="Edit currently enrolled">
+                            <label class="form-check-label" for="chkEditEduPresent">Present (currently enrolled)</label>
+                        </div>
+                        <input type="text" id="txtEditGPA" class="form-control mb-2" placeholder="GPA (optional)" aria-label="Edit GPA">
+                        <button class="btn btn-success" id="btnUpdateEducation">Update Education</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Skills -->
