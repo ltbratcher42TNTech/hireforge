@@ -1490,52 +1490,62 @@ const generateResumePreview = () => {
     }
 
     // Exp
-    strHTML += '<section class="resume-preview-section"><h3>Experience</h3>'
     const arrJobs = objResumeDataCache.arrJobs.filter((objJob) => arrSelectedJobs.includes(objJob.JobID))
-    arrJobs.forEach((objJob) => {
-        const arrDetails = (objResumeDataCache.objDetailsByJobID[objJob.JobID] || []).filter((objDetail) => arrSelectedDetailIDs.includes(objDetail.DetailID))
-        strHTML += `
-            <div class="mb-2">
-                <div class="resume-job-header">
-                    <strong>${objJob.Title} — ${objJob.Company}</strong>
-                    <small>${formatResumeDateRange(objJob.StartDate, objJob.EndDate)}</small>
-                </div>
-                <ul>
-        `
-        arrDetails.forEach((objDetail) => {
-            strHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
+    if (arrJobs.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Experience</h3>'
+        arrJobs.forEach((objJob) => {
+            const arrDetails = (objResumeDataCache.objDetailsByJobID[objJob.JobID] || []).filter((objDetail) => arrSelectedDetailIDs.includes(objDetail.DetailID))
+            strHTML += `
+                <div class="mb-2">
+                    <div class="resume-job-header">
+                        <strong>${objJob.Title} — ${objJob.Company}</strong>
+                        <small>${formatResumeDateRange(objJob.StartDate, objJob.EndDate)}</small>
+                    </div>
+                    <ul>
+            `
+            arrDetails.forEach((objDetail) => {
+                strHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
+            })
+            strHTML += '</ul></div>'
         })
-        strHTML += '</ul></div>'
-    })
-    strHTML += '</section>'
+        strHTML += '</section>'
+    }
 
 
 
     //Skills
-    strHTML += '<section class="resume-preview-section"><h3>Skills</h3>'
+    let strSkillsSectionHTML = ''
     objResumeDataCache.arrCategories.forEach((objCategory) => {
         const arrCategorySkills = arrSelectedSkills.filter((objSkill) => objSkill.CategoryID === objCategory.CategoryID)
         if (!arrCategorySkills.length) return
         const strSkillNames = arrCategorySkills.map((objSkill) => objSkill.Name).join(', ')
-        strHTML += `<p><span class="fw-bold">${objCategory.Name}:</span> ${strSkillNames}</p>`
+        strSkillsSectionHTML += `<p><span class="fw-bold">${objCategory.Name}:</span> ${strSkillNames}</p>`
     })
-    strHTML += '</section>'
 
+    if (strSkillsSectionHTML) {
+        strHTML += `<section class="resume-preview-section"><h3>Skills</h3>${strSkillsSectionHTML}</section>`
+    }
 
 
     //Certs
-    strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
-    arrSelectedCerts.forEach((objCert) => {
-        strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`    })
-    strHTML += '</ul></section>'
+    if (arrSelectedCerts.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
+        arrSelectedCerts.forEach((objCert) => {
+            strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`
+        })
+        strHTML += '</ul></section>'
+    }
 
 
     
     //Awards
-    strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
-    arrSelectedAwards.forEach((objAward) => {
-        strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`    })
-    strHTML += '</ul></section>'
+    if (arrSelectedAwards.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
+        arrSelectedAwards.forEach((objAward) => {
+            strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
+        })
+        strHTML += '</ul></section>'
+    }
 
     document.querySelector('#divResumePreview').innerHTML = strHTML
     document.querySelector('#pResumeStatus').innerText = 'Resume preview generated.'
