@@ -1,8 +1,9 @@
 // routes/details.js
 const express = require('express')
 const router = express.Router()
+const { v4: uuidv4 } = require('uuid')
 const db = require('../utils/db')
-const { sendSuccess, sendError } = require('../utils/responses')
+const { sendSuccess, sendError, safeTrim, isValidLength, objFieldMaxLengths } = require('../utils/responses')
 
 // DELETE for if you wanna delete a detail
 router.delete('/:id', (req,res,next) => {

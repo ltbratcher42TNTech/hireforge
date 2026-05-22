@@ -127,6 +127,22 @@ db.serialize(() => {
     `
     db.run(strQuery)
 
+    // =====================================================
+    // EDUCATION
+    // =====================================================
+    strQuery = `
+        CREATE TABLE IF NOT EXISTS tblEducation (
+            EducationID TEXT PRIMARY KEY,
+            Institution TEXT NOT NULL,
+            Degree TEXT,
+            FieldOfStudy TEXT,
+            StartDate TEXT,
+            EndDate TEXT,
+            GPA TEXT
+        )
+    `
+    db.run(strQuery)
+
     console.log("All tables created successfully if they didn't exist.")
 })
 
