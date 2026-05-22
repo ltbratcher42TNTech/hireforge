@@ -10,6 +10,7 @@ const showSection = (strSectionName) => {
     document.getElementById('dashboardSection').style.display = 'none'
     document.getElementById('profileSection').style.display = 'none'
     document.getElementById('jobsSection').style.display = 'none'
+    document.getElementById('educationSection').style.display = 'none'
     document.getElementById('skillsSection').style.display = 'none'
     document.getElementById('certsSection').style.display = 'none'
     document.getElementById('awardsSection').style.display = 'none'
@@ -34,6 +35,11 @@ document.querySelector('#btnNavProfile').addEventListener('click', () => {
 document.querySelector('#btnNavJobs').addEventListener('click', () => {
     showSection('jobs')
     loadJobs()
+})
+
+document.querySelector('#btnNavEducation').addEventListener('click', () => {
+    showSection('education')
+    loadEducation()
 })
 
 document.querySelector('#btnNavSkills').addEventListener('click', () => {
@@ -86,6 +92,7 @@ const objResumeDataCache = {
     objProfile: null,
     objSummary: null,
     arrJobs: [],
+    arrEducation: [],
     arrCategories: [],
     arrSkills: [],
     arrCerts: [],
@@ -498,6 +505,235 @@ document.querySelector('#btnAddJob').addEventListener('click', async () => {
 
     loadJobs() // refresh list
 })
+
+
+// ===================================================
+// Education
+// ===================================================
+
+const loadEducation = async () => {
+    document.querySelector('#divEducationEditView').style.display = 'none'
+    document.querySelector('#divEducation').style.display = 'block'
+    const objResponse = await fetch(`${strBaseURL}/api/education`)
+    const objData = await objResponse.json()
+    const arrEducation = objData.data && objData.data.education ? objData.data.education : []
+
+    const divEducation = document.querySelector('#divEducation')
+    divEducation.innerHTML = ''
+
+    arrEducation.forEach(function(objEducation){
+        // Heavily AI with this specific part
+        divEducation.innerHTML += `
+            <div class="card p-3 mb-2 btnSelectEducation" style="cursor:pointer;" data-id="${objEducation.EducationID}" data-institution="${objEducation.Institution}" data-degree="${objEducation.Degree}" data-fieldofstudy="${objEducation.FieldOfStudy || ''}" data-startdate="${objEducation.StartDate}" data-enddate="${objEducation.EndDate || ''}" data-gpa="${objEducation.GPA || ''}">
+                <strong>${objEducation.Institution}</strong>
+                <br>
+                ${objEducation.Degree}${objEducation.FieldOfStudy ? ' — ' + objEducation.FieldOfStudy : ''}
+                <br>
+                <small>${formatResumeDateRange(objEducation.StartDate, objEducation.EndDate)}</small>
+                ${objEducation.GPA ? '<br><small>GPA: ' + objEducation.GPA + '</small>' : ''}<br>
+                <button class="btn btn-danger btn-sm mt-2 btnDeleteEducation" data-id="${objEducation.EducationID}">Delete</button>
+            </div>
+        `
+    })
+}
+
+let strCurrentEducationID = ''
+
+document.querySelector('#chkEduPresent').addEventListener('change', function(){
+    const blnIsPresent = document.querySelector('#chkEduPresent').checked
+    document.querySelector('#txtEduEndDate').disabled = blnIsPresent
+
+    if (blnIsPresent) {
+        document.querySelector('#txtEduEndDate').value = ''
+    }
+})
+
+document.querySelector('#divEducation').addEventListener('click', async function(objEvent) {
+    if (objEvent.target.classList.contains('btnDeleteEducation')){
+        const strEducationID = objEvent.target.dataset.id
+
+        const objResponse = await fetch(`${strBaseURL}/api/education/${strEducationID}`, {
+            method: 'DELETE'
+        })
+        const objData = await objResponse.json()
+
+        if (objResponse.status !== 200){
+            alert(objData.message)
+            return
+        }
+
+        loadEducation()
+        return
+    }
+
+    const divEducation = objEvent.target.closest('.btnSelectEducation')
+    if (divEducation) {
+        strCurrentEducationID = divEducation.dataset.id
+        document.querySelector('#txtSelectedEducation').innerText = `${divEducation.dataset.institution} — ${divEducation.dataset.degree}`
+        document.querySelector('#txtEditInstitution').value = divEducation.dataset.institution || ''
+        document.querySelector('#txtEditDegree').value = divEducation.dataset.degree || ''
+        document.querySelector('#txtEditFieldOfStudy').value = divEducation.dataset.fieldofstudy || ''
+        document.querySelector('#txtEditEduStartDate').value = divEducation.dataset.startdate || ''
+        document.querySelector('#txtEditEduEndDate').value = divEducation.dataset.enddate || ''
+        document.querySelector('#chkEditEduPresent').checked = !divEducation.dataset.enddate
+        document.querySelector('#txtEditEduEndDate').disabled = !divEducation.dataset.enddate
+        document.querySelector('#txtEditGPA').value = divEducation.dataset.gpa || ''
+
+        document.querySelector('#divEducation').style.display = 'none'
+        document.querySelector('#divEducationEditView').style.display = 'block'
+    }
+})
+
+document.querySelector('#chkEditEduPresent').addEventListener('change', function(){
+    const blnIsPresent = document.querySelector('#chkEditEduPresent').checked
+    document.querySelector('#txtEditEduEndDate').disabled = blnIsPresent
+
+    if (blnIsPresent) {
+        document.querySelector('#txtEditEduEndDate').value = ''
+    }
+})
+
+document.querySelector('#btnBackToEducation').addEventListener('click', function() {
+    document.querySelector('#divEducationEditView').style.display = 'none'
+    document.querySelector('#divEducation').style.display = 'block'
+    loadEducation()
+})
+
+document.querySelector('#btnUpdateEducation').addEventListener('click', async function() {
+    const strInstitution = document.querySelector('#txtEditInstitution').value.trim()
+    const strDegree = document.querySelector('#txtEditDegree').value.trim()
+    const strFieldOfStudy = document.querySelector('#txtEditFieldOfStudy').value.trim()
+    const strStartDate = document.querySelector('#txtEditEduStartDate').value
+    let strEndDate = document.querySelector('#txtEditEduEndDate').value
+    const blnIsPresent = document.querySelector('#chkEditEduPresent').checked
+    const strGPA = document.querySelector('#txtEditGPA').value.trim()
+
+    if (blnIsPresent){
+        strEndDate = ''
+    }
+
+    let blnError = false
+    let strMessage = ''
+
+    if (!strInstitution){
+        blnError = true
+        strMessage += '<p>Institution is required</p>'
+    }
+    if (!strDegree){
+        blnError = true
+        strMessage += '<p>Degree is required</p>'
+    }
+    if (!strStartDate){
+        blnError = true
+        strMessage += '<p>Start date is required</p>'
+    }
+    if (!strEndDate && !blnIsPresent){
+        blnError = true
+        strMessage += '<p>End date is required</p>'
+    }
+
+    if (blnError){
+        alert(strMessage)
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/education/${strCurrentEducationID}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            institution: strInstitution,
+            degree: strDegree,
+            fieldOfStudy: strFieldOfStudy,
+            startDate: strStartDate,
+            endDate: strEndDate,
+            isPresent: blnIsPresent,
+            gpa: strGPA
+        })
+    })
+
+    const objData = await objResponse.json()
+    if (objResponse.status !== 200){
+        alert(objData.message)
+        return
+    }
+
+    document.querySelector('#divEducationEditView').style.display = 'none'
+    document.querySelector('#divEducation').style.display = 'block'
+    loadEducation()
+})
+
+document.querySelector('#btnAddEducation').addEventListener('click', async function() {
+    const strInstitution = document.querySelector('#txtInstitution').value.trim()
+    const strDegree = document.querySelector('#txtDegree').value.trim()
+    const strFieldOfStudy = document.querySelector('#txtFieldOfStudy').value.trim()
+    const strStartDate = document.querySelector('#txtEduStartDate').value
+    let strEndDate = document.querySelector('#txtEduEndDate').value
+    const blnIsPresent = document.querySelector('#chkEduPresent').checked
+    const strGPA = document.querySelector('#txtGPA').value.trim()
+
+    if (blnIsPresent){
+        strEndDate = ''
+    }
+
+    let blnError = false
+    let strMessage = ''
+
+    if (!strInstitution){
+        blnError = true
+        strMessage += '<p>Institution is required</p>'
+    }
+    if (!strDegree){
+        blnError = true
+        strMessage += '<p>Degree is required</p>'
+    }
+    if (!strStartDate){
+        blnError = true
+        strMessage += '<p>Start date is required</p>'
+    }
+    if (!strEndDate && !blnIsPresent){
+        blnError = true
+        strMessage += '<p>End date is required</p>'
+    }
+
+    if (blnError){
+        alert(strMessage)
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/education`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            institution: strInstitution,
+            degree: strDegree,
+            fieldOfStudy: strFieldOfStudy,
+            startDate: strStartDate,
+            endDate: strEndDate,
+            isPresent: blnIsPresent,
+            gpa: strGPA
+        })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 201){
+        alert(objData.message)
+        return
+    }
+
+    document.querySelector('#txtInstitution').value = ''
+    document.querySelector('#txtDegree').value = ''
+    document.querySelector('#txtFieldOfStudy').value = ''
+    document.querySelector('#txtEduStartDate').value = ''
+    document.querySelector('#txtEduEndDate').value = ''
+    document.querySelector('#chkEduPresent').checked = false
+    document.querySelector('#txtEduEndDate').disabled = false
+    document.querySelector('#txtGPA').value = ''
+
+    loadEducation()
+})
+
+
 
 // ===================================================
 // Skills
@@ -999,6 +1235,10 @@ const loadResumeBuilderData = async () => {
             objResumeDataCache.objDetailsByJobID[objJob.JobID] = objDetailData.data && objDetailData.data.details ? objDetailData.data.details : []
         }
 
+        const objEducationResponse = await fetch(`${strBaseURL}/api/education`)
+        const objEducationData = await objEducationResponse.json()
+        objResumeDataCache.arrEducation = objEducationData.data && objEducationData.data.education ? objEducationData.data.education : []
+
         renderResumeSelectionUI()
         document.querySelector('#pResumeStatus').innerText = 'Resume data loaded. Select items and click Generate Resume.'
     } catch (objError) {
@@ -1011,6 +1251,7 @@ const renderResumeSelectionUI = () => {
     renderResumeSummarySelection()
     renderResumeProfileSelection()
     renderResumeJobsSelection()
+    renderResumeEducationSelection()
     renderResumeSkillsSelection()
     renderResumeCertSelection()
     renderResumeAwardSelection()
@@ -1102,6 +1343,25 @@ const renderResumeJobsSelection = () => {
     divJobs.innerHTML = strJobsHTML
 }
 
+const renderResumeEducationSelection = () => {
+    const divResumeEducation = document.querySelector('#divResumeEducation')
+    const arrEducation = objResumeDataCache.arrEducation
+
+    if (!arrEducation.length) {
+        divResumeEducation.innerHTML = '<p class="text-muted mb-0">No education found.</p>'
+        return
+    }
+
+    divResumeEducation.innerHTML = arrEducation.map((objEducation) => `
+        <div class="form-check">
+            <input class="form-check-input chkResumeEducation" type="checkbox" id="chkEdu${objEducation.EducationID}" data-edu-id="${objEducation.EducationID}" checked aria-label="Select ${objEducation.Institution}">
+            <label class="form-check-label" for="chkEdu${objEducation.EducationID}">
+                ${objEducation.Degree}${objEducation.FieldOfStudy ? ' — ' + objEducation.FieldOfStudy : ''} at ${objEducation.Institution}
+            </label>
+        </div>
+    `).join('')
+}
+
 const renderResumeSkillsSelection = () => {
     const divSkills = document.querySelector('#divResumeSkills')
     const arrCategories = objResumeDataCache.arrCategories
@@ -1171,6 +1431,7 @@ const generateResumePreview = () => {
     const objProfile = objResumeDataCache.objProfile
     const arrSelectedProfileFields = Array.from(document.querySelectorAll('.chkResumeProfileField:checked')).map((objElement) => objElement.dataset.field)
     const arrSelectedJobs = Array.from(document.querySelectorAll('.chkResumeJob:checked')).map((objElement) => objElement.dataset.jobId)
+    const arrSelectedEduIDs = Array.from(document.querySelectorAll('.chkResumeEducation:checked')).map((objElement) => objElement.dataset.eduId)
     const arrSelectedDetailIDs = Array.from(document.querySelectorAll('.chkResumeDetail:checked')).map((objElement) => objElement.dataset.detailId)
     const arrSelectedSkillIDs = Array.from(document.querySelectorAll('.chkResumeSkill:checked')).map((objElement) => objElement.dataset.skillId)
     const arrSelectedCertIDs = Array.from(document.querySelectorAll('.chkResumeCert:checked')).map((objElement) => objElement.dataset.certId)
@@ -1210,49 +1471,81 @@ const generateResumePreview = () => {
         `
     }
 
-    strHTML += '<section class="resume-preview-section"><h3>Experience</h3>'
-    const arrJobs = objResumeDataCache.arrJobs.filter((objJob) => arrSelectedJobs.includes(objJob.JobID))
-    arrJobs.forEach((objJob) => {
-        const arrDetails = (objResumeDataCache.objDetailsByJobID[objJob.JobID] || []).filter((objDetail) => arrSelectedDetailIDs.includes(objDetail.DetailID))
-        strHTML += `
-            <div class="mb-2">
-                <div class="resume-job-header">
-                    <strong>${objJob.Title} — ${objJob.Company}</strong>
-                    <small>${formatResumeDateRange(objJob.StartDate, objJob.EndDate)}</small>
+    //Education
+    const arrSelectedEducation = objResumeDataCache.arrEducation.filter((objEdu) => arrSelectedEduIDs.includes(objEdu.EducationID))
+    if (arrSelectedEducation.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Education</h3>'
+        arrSelectedEducation.forEach((objEdu) => {
+            strHTML += `
+                <div class="mb-2">
+                    <div class="resume-job-header">
+                        <strong>${objEdu.Institution}</strong>
+                        <small>${formatResumeDateRange(objEdu.StartDate, objEdu.EndDate)}</small>
+                    </div>
+                    <div>${objEdu.Degree}${objEdu.FieldOfStudy ? ' — ' + objEdu.FieldOfStudy : ''}${objEdu.GPA ? ' | GPA: ' + objEdu.GPA : ''}</div>
                 </div>
-                <ul>
-        `
-        arrDetails.forEach((objDetail) => {
-            strHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
+            `
         })
-        strHTML += '</ul></div>'
-    })
-    strHTML += '</section>'
+        strHTML += '</section>'
+    }
+
+    // Exp
+    const arrJobs = objResumeDataCache.arrJobs.filter((objJob) => arrSelectedJobs.includes(objJob.JobID))
+    if (arrJobs.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Experience</h3>'
+        arrJobs.forEach((objJob) => {
+            const arrDetails = (objResumeDataCache.objDetailsByJobID[objJob.JobID] || []).filter((objDetail) => arrSelectedDetailIDs.includes(objDetail.DetailID))
+            strHTML += `
+                <div class="mb-2">
+                    <div class="resume-job-header">
+                        <strong>${objJob.Title} — ${objJob.Company}</strong>
+                        <small>${formatResumeDateRange(objJob.StartDate, objJob.EndDate)}</small>
+                    </div>
+                    <ul>
+            `
+            arrDetails.forEach((objDetail) => {
+                strHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
+            })
+            strHTML += '</ul></div>'
+        })
+        strHTML += '</section>'
+    }
 
 
 
-    strHTML += '<section class="resume-preview-section"><h3>Skills</h3>'
+    //Skills
+    let strSkillsSectionHTML = ''
     objResumeDataCache.arrCategories.forEach((objCategory) => {
         const arrCategorySkills = arrSelectedSkills.filter((objSkill) => objSkill.CategoryID === objCategory.CategoryID)
         if (!arrCategorySkills.length) return
         const strSkillNames = arrCategorySkills.map((objSkill) => objSkill.Name).join(', ')
-        strHTML += `<p><span class="fw-bold">${objCategory.Name}:</span> ${strSkillNames}</p>`
+        strSkillsSectionHTML += `<p><span class="fw-bold">${objCategory.Name}:</span> ${strSkillNames}</p>`
     })
-    strHTML += '</section>'
+
+    if (strSkillsSectionHTML) {
+        strHTML += `<section class="resume-preview-section"><h3>Skills</h3>${strSkillsSectionHTML}</section>`
+    }
 
 
-
-    strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
-    arrSelectedCerts.forEach((objCert) => {
-        strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`    })
-    strHTML += '</ul></section>'
+    //Certs
+    if (arrSelectedCerts.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
+        arrSelectedCerts.forEach((objCert) => {
+            strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`
+        })
+        strHTML += '</ul></section>'
+    }
 
 
     
-    strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
-    arrSelectedAwards.forEach((objAward) => {
-        strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`    })
-    strHTML += '</ul></section>'
+    //Awards
+    if (arrSelectedAwards.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
+        arrSelectedAwards.forEach((objAward) => {
+            strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
+        })
+        strHTML += '</ul></section>'
+    }
 
     document.querySelector('#divResumePreview').innerHTML = strHTML
     document.querySelector('#pResumeStatus').innerText = 'Resume preview generated.'

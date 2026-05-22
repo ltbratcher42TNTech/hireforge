@@ -42,6 +42,7 @@ body {
 }
 
 .resume-job-header {
+    gap: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -72,32 +73,40 @@ body {
 
 @media print {
 
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
     /* target header and logo so it doesnt appear */
     .container header, 
-    header.d-flex {
+    header.d-flex,
+    nav,
+    footer {
         display: none !important;
     }
 
     /* Absolutely mercilessly KILL Bootstrap flex layout for print (assassination for messing with my print feature)*/
     body.d-flex {
         display: block !important;
+        min-height: 0 !important;
     }
 
     body.d-flex > .flex-grow-1 {
         display: block !important;
         flex: none !important;
+        min-height: 0 !important;
     }
 
     .flex-grow-1 {
         flex: none !important;
+        min-height: 0 !important;
     }
 
-    /* Hide absolutely everything first */
-    body > * {
-        display: none !important;
-    }
-
-    /* Then only show the resume preview div */
     .container {
         display: block !important;
         margin: 0 !important;
@@ -107,6 +116,8 @@ body {
 
     #resumeSection {
         display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     #resumeSection > h3 {
@@ -115,6 +126,8 @@ body {
 
     .row {
         display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .col-lg-5 {
@@ -125,16 +138,14 @@ body {
         display: block !important;
         width: 100% !important;
         max-width: 100% !important;
+        flex: none !important;
     }
 
     .card {
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
-    }
-
-    nav {
-        display: none !important;
+        margin: 0 !important;
     }
 
     h1 {
@@ -146,12 +157,31 @@ body {
         margin: 0 !important;
     }
 
+    /* tighten bullet spacing slightly */
+    .resume-preview ul {
+        margin-bottom: 0.2rem !important;
+        padding-left: 1rem !important;
+    }
+
+    .resume-preview li {
+        margin-bottom: 0.1rem !important;
+        line-height: 1.2 !important;
+    }
+
     .resume-preview-section:last-child {
         margin-bottom: 0 !important;
         padding-bottom: 0 !important;
     }
 
+    .resume-preview-section,
+    ul,
+    li {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
     * {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+    }
 }
