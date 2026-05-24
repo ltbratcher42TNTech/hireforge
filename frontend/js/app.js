@@ -11,6 +11,7 @@ const showSection = (strSectionName) => {
     document.getElementById('profileSection').style.display = 'none'
     document.getElementById('jobsSection').style.display = 'none'
     document.getElementById('educationSection').style.display = 'none'
+    document.getElementById('projectsSection').style.display = 'none'
     document.getElementById('skillsSection').style.display = 'none'
     document.getElementById('certsSection').style.display = 'none'
     document.getElementById('awardsSection').style.display = 'none'
@@ -40,6 +41,11 @@ document.querySelector('#btnNavJobs').addEventListener('click', () => {
 document.querySelector('#btnNavEducation').addEventListener('click', () => {
     showSection('education')
     loadEducation()
+})
+
+document.querySelector('#btnNavProjects').addEventListener('click', () => {
+    showSection('projects')
+    loadProjects()
 })
 
 document.querySelector('#btnNavSkills').addEventListener('click', () => {
@@ -93,11 +99,13 @@ const objResumeDataCache = {
     objSummary: null,
     arrJobs: [],
     arrEducation: [],
+    arrProjects: [],
     arrCategories: [],
     arrSkills: [],
     arrCerts: [],
     arrAwards: [],
-    objDetailsByJobID: {}
+    objDetailsByJobID: {},
+    objDetailsByProjectID: {}
 }
 
 const strGeminiKeyStorageName = 'strGeminiApiKey'
@@ -736,6 +744,186 @@ document.querySelector('#btnAddEducation').addEventListener('click', async funct
 
 
 // ===================================================
+// Projects
+// ===================================================
+
+let strCurrentProjectID = ''
+
+// Loads the project list and resets to list view
+const loadProjects = async () => {
+    document.querySelector('#divProjectDetailsView').style.display = 'none'
+    document.querySelector('#divProjectListView').style.display = 'block'
+
+    const objResponse = await fetch(`${strBaseURL}/api/projects`)
+    const objData = await objResponse.json()
+    const arrProjects = objData.data && objData.data.projects ? objData.data.projects : []
+
+    const divProjects = document.querySelector('#divProjects')
+    divProjects.innerHTML = ''
+
+    arrProjects.forEach(function(objProject) {
+        divProjects.innerHTML += `
+            <div class="card p-3 mb-2 btnSelectProject" style="cursor:pointer;" data-id="${objProject.ProjectID}" data-name="${objProject.Name}" data-url="${objProject.URL}">
+                <strong>${objProject.Name}</strong>
+                <br>
+                <small>${objProject.URL}</small>
+                <button class="btn btn-danger btn-sm mt-2 btnDeleteProject" data-id="${objProject.ProjectID}">Delete</button>
+            </div>
+        `
+    })
+}
+
+// Loads bullets for one selected project
+const loadProjectDetails = async (strProjectID) => {
+    const objResponse = await fetch(`${strBaseURL}/api/projects/${strProjectID}/details`)
+    const objData = await objResponse.json()
+    const arrDetails = objData.data && objData.data.details ? objData.data.details : []
+
+    const divProjectDetailList = document.querySelector('#divProjectDetailList')
+    divProjectDetailList.innerHTML = ''
+
+    arrDetails.forEach(function(objDetail) {
+        divProjectDetailList.innerHTML += `
+            <div class="card p-2 mb-1">
+                - ${objDetail.Detail}
+                <span class="text-danger btnDeleteProjectDetail" style="cursor:pointer; font-size:0.8rem;" data-id="${objDetail.DetailID}">remove</span>
+            </div>
+        `
+    })
+}
+
+// Handles deleting projects and selecting a project card
+document.querySelector('#divProjects').addEventListener('click', async function(objEvent) {
+    if (objEvent.target.classList.contains('btnDeleteProject')) {
+        const strProjectID = objEvent.target.dataset.id
+        const objResponse = await fetch(`${strBaseURL}/api/projects/${strProjectID}`, { method: 'DELETE' })
+        const objData = await objResponse.json()
+
+        if (objResponse.status !== 200) {
+            alert(objData.message)
+            return
+        }
+
+        loadProjects()
+        return
+    }
+
+    const divProject = objEvent.target.closest('.btnSelectProject')
+    if (divProject) {
+        strCurrentProjectID = divProject.dataset.id
+        document.querySelector('#txtSelectedProject').innerText = divProject.dataset.name
+        document.querySelector('#txtEditProjectName').value = divProject.dataset.name || ''
+        document.querySelector('#txtEditProjectURL').value = divProject.dataset.url || ''
+        document.querySelector('#divProjectListView').style.display = 'none'
+        document.querySelector('#divProjectDetailsView').style.display = 'block'
+        loadProjectDetails(strCurrentProjectID)
+    }
+})
+
+// Handles deleting a single project bullet detail
+document.querySelector('#divProjectDetailList').addEventListener('click', async function(objEvent) {
+    if (objEvent.target.classList.contains('btnDeleteProjectDetail')) {
+        const strDetailID = objEvent.target.dataset.id
+        const objResponse = await fetch(`${strBaseURL}/api/projectdetails/${strDetailID}`, { method: 'DELETE' })
+        const objData = await objResponse.json()
+
+        if (objResponse.status !== 200) {
+            alert(objData.message)
+            return
+        }
+
+        loadProjectDetails(strCurrentProjectID)
+    }
+})
+
+// Back button to return from project details to project list
+document.querySelector('#btnBackToProjects').addEventListener('click', function() {
+    document.querySelector('#divProjectDetailsView').style.display = 'none'
+    document.querySelector('#divProjectListView').style.display = 'block'
+    loadProjects()
+})
+
+// POST new project
+document.querySelector('#btnAddProject').addEventListener('click', async function() {
+    const strName = document.querySelector('#txtProjectName').value.trim()
+    const strURL = document.querySelector('#txtProjectURL').value.trim()
+
+    if (!strName || !strURL) {
+        alert('Project name and URL are required')
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/projects`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: strName, url: strURL })
+    })
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    document.querySelector('#txtProjectName').value = ''
+    document.querySelector('#txtProjectURL').value = ''
+    loadProjects()
+})
+
+// Updates the selected project
+document.querySelector('#btnUpdateProject').addEventListener('click', async function() {
+    const strName = document.querySelector('#txtEditProjectName').value.trim()
+    const strURL = document.querySelector('#txtEditProjectURL').value.trim()
+
+    if (!strName || !strURL) {
+        alert('Project name and URL are required')
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/projects/${strCurrentProjectID}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: strName, url: strURL })
+    })
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200) {
+        alert(objData.message)
+        return
+    }
+
+    loadProjects()
+})
+
+// Adds one new bullet/detail under selected project
+document.querySelector('#btnAddProjectDetail').addEventListener('click', async function() {
+    const strDetail = document.querySelector('#txtProjectDetail').value.trim()
+
+    if (!strDetail) {
+        alert('Please enter a detail')
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/projects/${strCurrentProjectID}/details`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ detail: strDetail })
+    })
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 201) {
+        alert(objData.message)
+        return
+    }
+
+    document.querySelector('#txtProjectDetail').value = ''
+    loadProjectDetails(strCurrentProjectID)
+})
+
+
+
+
+// ===================================================
 // Skills
 // ===================================================
 
@@ -1228,6 +1416,17 @@ const loadResumeBuilderData = async () => {
         const objAwardData = await objAwardResponse.json()
         objResumeDataCache.arrAwards = objAwardData.data && objAwardData.data.awards ? objAwardData.data.awards : []
 
+        const objProjectsResponse = await fetch(`${strBaseURL}/api/projects`)
+        const objProjectsData = await objProjectsResponse.json()
+        objResumeDataCache.arrProjects = objProjectsData.data && objProjectsData.data.projects ? objProjectsData.data.projects : []
+
+        objResumeDataCache.objDetailsByProjectID = {}
+        for (const objProject of objResumeDataCache.arrProjects) {
+            const objProjectDetailResponse = await fetch(`${strBaseURL}/api/projects/${objProject.ProjectID}/details`)
+            const objProjectDetailData = await objProjectDetailResponse.json()
+            objResumeDataCache.objDetailsByProjectID[objProject.ProjectID] = objProjectDetailData.data && objProjectDetailData.data.details ? objProjectDetailData.data.details : []
+        }
+
         objResumeDataCache.objDetailsByJobID = {}
         for (const objJob of objResumeDataCache.arrJobs) {
             const objDetailResponse = await fetch(`${strBaseURL}/api/jobs/${objJob.JobID}/details`)
@@ -1252,6 +1451,7 @@ const renderResumeSelectionUI = () => {
     renderResumeProfileSelection()
     renderResumeJobsSelection()
     renderResumeEducationSelection()
+    renderResumeProjectsSelection()
     renderResumeSkillsSelection()
     renderResumeCertSelection()
     renderResumeAwardSelection()
@@ -1389,6 +1589,42 @@ const renderResumeSkillsSelection = () => {
     divSkills.innerHTML = strHTML
 }
 
+const renderResumeProjectsSelection = () => {
+    const divProjects = document.querySelector('#divResumeProjects')
+    const arrProjects = objResumeDataCache.arrProjects
+
+    if (!arrProjects.length) {
+        divProjects.innerHTML = '<p class="text-muted mb-0">No projects found.</p>'
+        return
+    }
+
+    let strProjectsHTML = ''
+    arrProjects.forEach((objProject) => {
+        const arrDetails = objResumeDataCache.objDetailsByProjectID[objProject.ProjectID] || []
+        strProjectsHTML += `
+            <div class="border rounded p-2 mb-2">
+                <div class="form-check mb-2">
+                    <input class="form-check-input chkResumeProject" type="checkbox" id="chkProject${objProject.ProjectID}" data-project-id="${objProject.ProjectID}" checked aria-label="Select project ${objProject.Name}">
+                    <label class="form-check-label fw-bold" for="chkProject${objProject.ProjectID}">
+                        ${objProject.Name} — ${objProject.URL}
+                    </label>
+                </div>
+                ${arrDetails.map((objDetail) => `
+                    <div class="form-check ms-3">
+                        <input class="form-check-input chkResumeProjectDetail" type="checkbox" id="chkProjectDetail${objDetail.DetailID}" data-project-id="${objProject.ProjectID}" data-detail-id="${objDetail.DetailID}" checked aria-label="Select project detail ${objDetail.Detail}">
+                        <label class="form-check-label" for="chkProjectDetail${objDetail.DetailID}">
+                            ${objDetail.Detail}
+                        </label>
+                    </div>
+                `).join('')}
+            </div>
+        `
+    })
+
+    divProjects.innerHTML = strProjectsHTML
+}
+
+
 const renderResumeCertSelection = () => {
     const divCerts = document.querySelector('#divResumeCerts')
     const arrCerts = objResumeDataCache.arrCerts
@@ -1431,8 +1667,10 @@ const generateResumePreview = () => {
     const objProfile = objResumeDataCache.objProfile
     const arrSelectedProfileFields = Array.from(document.querySelectorAll('.chkResumeProfileField:checked')).map((objElement) => objElement.dataset.field)
     const arrSelectedJobs = Array.from(document.querySelectorAll('.chkResumeJob:checked')).map((objElement) => objElement.dataset.jobId)
+    const arrSelectedProjects = Array.from(document.querySelectorAll('.chkResumeProject:checked')).map((objElement) => objElement.dataset.projectId)
     const arrSelectedEduIDs = Array.from(document.querySelectorAll('.chkResumeEducation:checked')).map((objElement) => objElement.dataset.eduId)
     const arrSelectedDetailIDs = Array.from(document.querySelectorAll('.chkResumeDetail:checked')).map((objElement) => objElement.dataset.detailId)
+    const arrSelectedProjectDetailIDs = Array.from(document.querySelectorAll('.chkResumeProjectDetail:checked')).map((objElement) => objElement.dataset.detailId)
     const arrSelectedSkillIDs = Array.from(document.querySelectorAll('.chkResumeSkill:checked')).map((objElement) => objElement.dataset.skillId)
     const arrSelectedCertIDs = Array.from(document.querySelectorAll('.chkResumeCert:checked')).map((objElement) => objElement.dataset.certId)
     const arrSelectedAwardIDs = Array.from(document.querySelectorAll('.chkResumeAward:checked')).map((objElement) => objElement.dataset.awardId)
@@ -1500,6 +1738,29 @@ const generateResumePreview = () => {
                     <div class="resume-job-header">
                         <strong>${objJob.Title} — ${objJob.Company}</strong>
                         <small>${formatResumeDateRange(objJob.StartDate, objJob.EndDate)}</small>
+                    </div>
+                    <ul>
+            `
+            arrDetails.forEach((objDetail) => {
+                strHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
+            })
+            strHTML += '</ul></div>'
+        })
+        strHTML += '</section>'
+    }
+
+
+    // Projects
+     const arrProjects = objResumeDataCache.arrProjects.filter((objProject) => arrSelectedProjects.includes(objProject.ProjectID))
+    if (arrProjects.length) {
+        strHTML += '<section class="resume-preview-section"><h3>Projects</h3>'
+        arrProjects.forEach((objProject) => {
+            const arrDetails = (objResumeDataCache.objDetailsByProjectID[objProject.ProjectID] || []).filter((objDetail) => arrSelectedProjectDetailIDs.includes(objDetail.DetailID))
+            strHTML += `
+                <div class="mb-2">
+                    <div class="resume-job-header">
+                        <strong>${objProject.Name}</strong>
+                        <small>${objProject.URL}</small>
                     </div>
                     <ul>
             `
@@ -1598,12 +1859,15 @@ document.querySelector('#btnPrintResume').addEventListener('click', () => {
 // This will essentially be a copy paste of whats done for resume
 const objCoverLetterDataCache = {
     objProfile: null,
+    arrEducation: [],
     arrJobs: [],
+    arrProjects: [],
     arrCategories: [],
     arrSkills: [],
     arrCerts: [],
     arrAwards: [],
-    objDetailsByJobID: {}
+    objDetailsByJobID: {},
+    objDetailsByProjectID: {}
 }
 
 // Loads all data needed to populate cover letter selection UI
@@ -1622,6 +1886,22 @@ const loadCoverLetterData = async () => {
         const objJobsResponse = await fetch(`${strBaseURL}/api/jobs`)
         const objJobsData = await objJobsResponse.json()
         objCoverLetterDataCache.arrJobs = objJobsData.data && objJobsData.data.jobs ? objJobsData.data.jobs : []
+
+        const objProjectsResponse = await fetch(`${strBaseURL}/api/projects`)
+        const objProjectsData = await objProjectsResponse.json()
+        objCoverLetterDataCache.arrProjects = objProjectsData.data && objProjectsData.data.projects ? objProjectsData.data.projects : []
+
+        objCoverLetterDataCache.objDetailsByProjectID = {}
+        for (const objProject of objCoverLetterDataCache.arrProjects) {
+            const objProjectDetailResponse = await fetch(`${strBaseURL}/api/projects/${objProject.ProjectID}/details`)
+            const objProjectDetailData = await objProjectDetailResponse.json()
+            objCoverLetterDataCache.objDetailsByProjectID[objProject.ProjectID] = objProjectDetailData.data && objProjectDetailData.data.details ? objProjectDetailData.data.details : []
+        }
+
+        const objEducationResponse = await fetch(`${strBaseURL}/api/education`)
+        const objEducationData = await objEducationResponse.json()
+        objCoverLetterDataCache.arrEducation = objEducationData.data && objEducationData.data.education ? objEducationData.data.education : []
+
 
         const objCategoryResponse = await fetch(`${strBaseURL}/api/skillcategories`)
         const objCategoryData = await objCategoryResponse.json()
@@ -1655,11 +1935,34 @@ const loadCoverLetterData = async () => {
 }
 
 const renderCoverLetterSelectionUI = () => {
+    renderCLEducationSelection()
     renderCLJobsSelection()
+    renderCLProjectsSelection()
     renderCLSkillsSelection()
     renderCLCertSelection()
     renderCLAwardSelection()
 }
+
+
+const renderCLEducationSelection = () => {
+    const divCLEducation = document.querySelector('#divCLEducation')
+    const arrEducation = objCoverLetterDataCache.arrEducation
+
+    if (!arrEducation.length) {
+        divCLEducation.innerHTML = '<p class="text-muted mb-0">No education found.</p>'
+        return
+    }
+
+    divCLEducation.innerHTML = arrEducation.map((objEducation) => `
+        <div class="form-check">
+            <input class="form-check-input chkCLEducation" type="checkbox" id="chkCLEdu${objEducation.EducationID}" data-edu-id="${objEducation.EducationID}" checked aria-label="Include education ${objEducation.Institution}">
+            <label class="form-check-label" for="chkCLEdu${objEducation.EducationID}">
+                ${objEducation.Degree}${objEducation.FieldOfStudy ? ' — ' + objEducation.FieldOfStudy : ''} at ${objEducation.Institution}
+            </label>
+        </div>
+    `).join('')
+}
+
 
 const renderCLJobsSelection = () => {
     const divCLJobs = document.querySelector('#divCLJobs')
@@ -1683,6 +1986,31 @@ const renderCLJobsSelection = () => {
     })
 
     divCLJobs.innerHTML = strHTML
+}
+
+
+const renderCLProjectsSelection = () => {
+    const divCLProjects = document.querySelector('#divCLProjects')
+    const arrProjects = objCoverLetterDataCache.arrProjects
+
+    if (!arrProjects.length) {
+        divCLProjects.innerHTML = '<p class="text-muted mb-0">No projects found.</p>'
+        return
+    }
+
+    let strHTML = ''
+    arrProjects.forEach((objProject) => {
+        strHTML += `
+            <div class="form-check">
+                <input class="form-check-input chkCLProject" type="checkbox" id="chkCLProject${objProject.ProjectID}" data-project-id="${objProject.ProjectID}" checked aria-label="Include project ${objProject.Name}">
+                <label class="form-check-label" for="chkCLProject${objProject.ProjectID}">
+                    ${objProject.Name} — ${objProject.URL}
+                </label>
+            </div>
+        `
+    })
+
+    divCLProjects.innerHTML = strHTML
 }
 
 const renderCLSkillsSelection = () => {
@@ -1786,6 +2114,8 @@ const generateCoverLetter = async () => {
 
     // Collect selected jobs with their deets
     const arrSelectedJobIDs = Array.from(document.querySelectorAll('.chkCLJob:checked')).map((objEl) => objEl.dataset.jobId)
+    const arrSelectedEduIDs = Array.from(document.querySelectorAll('.chkCLEducation:checked')).map((objEl) => objEl.dataset.eduId)
+    const arrSelectedProjectIDs = Array.from(document.querySelectorAll('.chkCLProject:checked')).map((objEl) => objEl.dataset.projectId)
     const arrSelectedSkillIDs = Array.from(document.querySelectorAll('.chkCLSkill:checked')).map((objEl) => objEl.dataset.skillId)
     const arrSelectedCertIDs = Array.from(document.querySelectorAll('.chkCLCert:checked')).map((objEl) => objEl.dataset.certId)
     const arrSelectedAwardIDs = Array.from(document.querySelectorAll('.chkCLAward:checked')).map((objEl) => objEl.dataset.awardId)
@@ -1797,6 +2127,18 @@ const generateCoverLetter = async () => {
             company: objJob.Company,
             dates: formatResumeDateRange(objJob.StartDate, objJob.EndDate),
             bullets: (objCoverLetterDataCache.objDetailsByJobID[objJob.JobID] || []).map((objD) => objD.Detail)
+        }))
+
+    const arrSelectedEducation = objCoverLetterDataCache.arrEducation
+        .filter((objEducation) => arrSelectedEduIDs.includes(objEducation.EducationID))
+        .map((objEducation) => `${objEducation.Degree}${objEducation.FieldOfStudy ? ' — ' + objEducation.FieldOfStudy : ''} at ${objEducation.Institution}`)
+
+    const arrSelectedProjects = objCoverLetterDataCache.arrProjects
+        .filter((objProject) => arrSelectedProjectIDs.includes(objProject.ProjectID))
+        .map((objProject) => ({
+            name: objProject.Name,
+            url: objProject.URL,
+            bullets: (objCoverLetterDataCache.objDetailsByProjectID[objProject.ProjectID] || []).map((objD) => objD.Detail)
         }))
 
     const arrSelectedSkills = objCoverLetterDataCache.arrSkills
@@ -1817,6 +2159,8 @@ const generateCoverLetter = async () => {
     document.querySelector('#txtCoverLetterOutput').value = ''
 
     console.log('jobs going to server:', arrSelectedJobs)
+    console.log('education:', arrSelectedEducation)
+    console.log('projects:', arrSelectedProjects)
     console.log('skills:', arrSelectedSkills)
     console.log('certs:', arrSelectedCerts)
     console.log('awards:', arrSelectedAwards)
@@ -1837,6 +2181,8 @@ const generateCoverLetter = async () => {
             companyContext: strCompanyContext,
             profile: objProfile,
             jobs: arrSelectedJobs,
+            projects: arrSelectedProjects,
+            education: arrSelectedEducation,
             skills: arrSelectedSkills,
             certifications: arrSelectedCerts,
             awards: arrSelectedAwards

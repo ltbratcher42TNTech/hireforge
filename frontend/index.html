@@ -30,6 +30,7 @@
                 <button class="btn btn-primary me-2" id="btnNavJobs">Jobs</button>
                 <button class="btn btn-primary me-2" id="btnNavEducation">Education</button>
                 <button class="btn btn-primary me-2" id="btnNavSkills">Skills</button>
+                <button class="btn btn-primary me-2" id="btnNavProjects">Projects</button>
                 <button class="btn btn-primary me-2" id="btnNavCerts">Certifications</button>
                 <button class="btn btn-primary me-2" id="btnNavAwards">Awards</button>
                 <button class="btn btn-primary me-2" id="btnNavSummary">Summary</button>
@@ -170,6 +171,34 @@
                 </div>
             </div>
 
+            <!-- Projects -->
+            <div id="projectsSection" style="display:none;">
+                <h3>Projects</h3>
+                <div id="divProjectListView">
+                    <div class="card p-3 mb-3">
+                        <input type="text" id="txtProjectName" class="form-control mb-2" placeholder="Project Name" aria-label="Project Name">
+                        <input type="url" id="txtProjectURL" class="form-control mb-2" placeholder="URL" aria-label="Project URL">
+                        <button class="btn btn-success" id="btnAddProject">Add Project</button>
+                    </div>
+                    <div id="divProjects"></div>
+                </div>
+                <div id="divProjectDetailsView" style="display:none;">
+                    <button class="btn btn-secondary mb-3" id="btnBackToProjects">Back</button>
+                    <h4 id="txtSelectedProject"></h4>
+                    <div class="card p-3 mb-3">
+                        <input type="text" id="txtEditProjectName" class="form-control mb-2" placeholder="Project Name" aria-label="Edit Project Name">
+                        <input type="url" id="txtEditProjectURL" class="form-control mb-2" placeholder="URL" aria-label="Edit Project URL">
+                        <button class="btn btn-success" id="btnUpdateProject">Update Project</button>
+                    </div>
+                    <div id="divProjectDetailList" class="mb-3"></div>
+                    <div class="card p-3">
+                        <input type="text" id="txtProjectDetail" class="form-control mb-2" placeholder="Add a bullet point" aria-label="Project detail">
+                        <button class="btn btn-success" id="btnAddProjectDetail">Add Bullet</button>
+                    </div>
+                </div>
+            </div>
+
+
             <!-- Certifications -->
             <div id="certsSection" style="display:none;">
                 <h3>Certifications</h3>
@@ -229,6 +258,11 @@
                         <div class="card p-3 mb-3">
                             <h5>Select Jobs + Bullet Points</h5>
                             <div id="divResumeJobs"></div>
+                        </div>
+
+                        <div class="card p-3 mb-3">
+                            <h5>Select Projects + Bullet Points</h5>
+                            <div id="divResumeProjects"></div>
                         </div>
 
                         <div class="card p-3 mb-3">
@@ -296,6 +330,16 @@
                     <div class="card p-3 mb-3">
                         <h5>Select Experience to Include</h5>
                         <div id="divCLJobs"></div>
+                    </div>
+
+                    <div class="card p-3 mb-3">
+                        <h5>Select Education to Include</h5>
+                        <div id="divCLEducation"></div>
+                    </div>
+
+                    <div class="card p-3 mb-3">
+                        <h5>Select Projects to Include</h5>
+                        <div id="divCLProjects"></div>
                     </div>
 
                     <div class="card p-3 mb-3">
