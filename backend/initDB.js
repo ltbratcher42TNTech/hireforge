@@ -66,6 +66,31 @@ db.serialize(() => {
     db.run(strQuery)
 
     // =====================================================
+    // PROJECTS
+    // =====================================================
+    strQuery = `
+        CREATE TABLE IF NOT EXISTS tblProjects (
+            ProjectID TEXT PRIMARY KEY,
+            Name TEXT,
+            URL TEXT
+        )
+    `
+    db.run(strQuery)
+
+    // =====================================================
+    // PROJECT DETAILS
+    // =====================================================
+    strQuery = `
+        CREATE TABLE IF NOT EXISTS tblProjectDetails (
+            DetailID TEXT PRIMARY KEY,
+            ProjectID TEXT,
+            Detail TEXT,
+            FOREIGN KEY (ProjectID) REFERENCES tblProjects(ProjectID) ON DELETE CASCADE
+        )
+    `
+    db.run(strQuery)
+
+    // =====================================================
     // SKILL CATEGORIES
     // =====================================================
     strQuery = `

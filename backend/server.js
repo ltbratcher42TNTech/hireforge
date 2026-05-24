@@ -73,6 +73,12 @@ app.use('/api/jobs', require('./routes/jobs'))
 app.use('/api/details', require('./routes/details'))
 
 // ===================================================================
+// PROJECT ROUTES
+// ===================================================================
+app.use('/api/projects', require('./routes/projects'))
+app.use('/api/projectdetails', require('./routes/projectdetails'))
+
+// ===================================================================
 // SKILL CATEGORIES ROUTES BELOW
 // ===================================================================
 
