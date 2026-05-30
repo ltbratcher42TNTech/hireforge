@@ -108,6 +108,9 @@ const objResumeDataCache = {
     objDetailsByProjectID: {}
 }
 
+const arrResumeSectionOrderDefault = ['education', 'experience', 'projects', 'skills', 'certifications', 'awards']
+let arrResumeSectionOrder = [...arrResumeSectionOrderDefault]
+
 const strGeminiKeyStorageName = 'strGeminiApiKey'
 
 // AI assisted here, this is basically local key manager for Gemini API key save/clear usage in browser only.
@@ -1455,6 +1458,7 @@ const renderResumeSelectionUI = () => {
     renderResumeSkillsSelection()
     renderResumeCertSelection()
     renderResumeAwardSelection()
+    renderResumeSectionOrderUI()
 }
 
 const renderResumeSummarySelection = () => {
@@ -1663,6 +1667,73 @@ const renderResumeAwardSelection = () => {
     `).join('')
 }
 
+const getResumeSectionLabel = (strSectionKey) => {
+    const objSectionLabels = {
+        education: 'Education',
+        experience: 'Experience',
+        projects: 'Projects',
+        skills: 'Skills',
+        certifications: 'Certifications',
+        awards: 'Awards'
+    }
+
+    return objSectionLabels[strSectionKey] || strSectionKey
+}
+
+const renderResumeSectionOrderUI = () => {
+    const divResumeSectionOrder = document.querySelector('#divResumeSectionOrder')
+
+    divResumeSectionOrder.innerHTML = arrResumeSectionOrder.map((strSectionKey, intIndex) => `
+        <div class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
+            <span>${getResumeSectionLabel(strSectionKey)}</span>
+            <div class="d-flex gap-1">
+                <button
+                    class="btn btn-outline-secondary btn-sm btnMoveResumeSection"
+                    data-direction="up"
+                    data-index="${intIndex}"
+                    ${intIndex === 0 ? 'disabled' : ''}
+                    aria-label="Move ${getResumeSectionLabel(strSectionKey)} section up">
+                    ↑
+                </button>
+                <button
+                    class="btn btn-outline-secondary btn-sm btnMoveResumeSection"
+                    data-direction="down"
+                    data-index="${intIndex}"
+                    ${intIndex === arrResumeSectionOrder.length - 1 ? 'disabled' : ''}
+                    aria-label="Move ${getResumeSectionLabel(strSectionKey)} section down">
+                    ↓
+                </button>
+            </div>
+        </div>
+    `).join('')
+}
+
+document.querySelector('#divResumeSectionOrder').addEventListener('click', (objEvent) => {
+    const objButton = objEvent.target.closest('.btnMoveResumeSection')
+    if (!objButton) return
+
+    const intIndex = parseInt(objButton.dataset.index, 10)
+    const strDirection = objButton.dataset.direction
+
+    if (Number.isNaN(intIndex)) return
+
+    if (strDirection === 'up' && intIndex > 0) {
+        const strSwapValue = arrResumeSectionOrder[intIndex - 1]
+        arrResumeSectionOrder[intIndex - 1] = arrResumeSectionOrder[intIndex]
+        arrResumeSectionOrder[intIndex] = strSwapValue
+    }
+
+    if (strDirection === 'down' && intIndex < arrResumeSectionOrder.length - 1) {
+        const strSwapValue = arrResumeSectionOrder[intIndex + 1]
+        arrResumeSectionOrder[intIndex + 1] = arrResumeSectionOrder[intIndex]
+        arrResumeSectionOrder[intIndex] = strSwapValue
+    }
+
+    renderResumeSectionOrderUI()
+    generateResumePreview()
+})
+
+
 const generateResumePreview = () => {
     const objProfile = objResumeDataCache.objProfile
     const arrSelectedProfileFields = Array.from(document.querySelectorAll('.chkResumeProfileField:checked')).map((objElement) => objElement.dataset.field)
@@ -1709,12 +1780,14 @@ const generateResumePreview = () => {
         `
     }
 
+    const objResumeSectionsByKey = {}
+
     //Education
     const arrSelectedEducation = objResumeDataCache.arrEducation.filter((objEdu) => arrSelectedEduIDs.includes(objEdu.EducationID))
     if (arrSelectedEducation.length) {
-        strHTML += '<section class="resume-preview-section"><h3>Education</h3>'
+        let strSectionHTML = '<section class="resume-preview-section"><h3>Education</h3>'
         arrSelectedEducation.forEach((objEdu) => {
-            strHTML += `
+            strSectionHTML += `
                 <div class="mb-2">
                     <div class="resume-job-header">
                         <strong>${objEdu.Institution}</strong>
@@ -1724,16 +1797,16 @@ const generateResumePreview = () => {
                 </div>
             `
         })
-        strHTML += '</section>'
-    }
+        strSectionHTML += '</section>'
+        objResumeSectionsByKey.education = strSectionHTML    }
 
     // Exp
     const arrJobs = objResumeDataCache.arrJobs.filter((objJob) => arrSelectedJobs.includes(objJob.JobID))
     if (arrJobs.length) {
-        strHTML += '<section class="resume-preview-section"><h3>Experience</h3>'
+        let strSectionHTML = '<section class="resume-preview-section"><h3>Experience</h3>'
         arrJobs.forEach((objJob) => {
             const arrDetails = (objResumeDataCache.objDetailsByJobID[objJob.JobID] || []).filter((objDetail) => arrSelectedDetailIDs.includes(objDetail.DetailID))
-            strHTML += `
+            strSectionHTML += `
                 <div class="mb-2">
                     <div class="resume-job-header">
                         <strong>${objJob.Title} — ${objJob.Company}</strong>
@@ -1742,21 +1815,22 @@ const generateResumePreview = () => {
                     <ul>
             `
             arrDetails.forEach((objDetail) => {
-                strHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
+                strSectionHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
             })
-            strHTML += '</ul></div>'
+            strSectionHTML += '</ul></div>'
         })
-        strHTML += '</section>'
+        strSectionHTML += '</section>'
+        objResumeSectionsByKey.experience = strSectionHTML
     }
 
 
     // Projects
-     const arrProjects = objResumeDataCache.arrProjects.filter((objProject) => arrSelectedProjects.includes(objProject.ProjectID))
+    const arrProjects = objResumeDataCache.arrProjects.filter((objProject) => arrSelectedProjects.includes(objProject.ProjectID))    
     if (arrProjects.length) {
-        strHTML += '<section class="resume-preview-section"><h3>Projects</h3>'
+        let strSectionHTML = '<section class="resume-preview-section"><h3>Projects</h3>'
         arrProjects.forEach((objProject) => {
             const arrDetails = (objResumeDataCache.objDetailsByProjectID[objProject.ProjectID] || []).filter((objDetail) => arrSelectedProjectDetailIDs.includes(objDetail.DetailID))
-            strHTML += `
+            strSectionHTML += `
                 <div class="mb-2">
                     <div class="resume-job-header">
                         <strong>${objProject.Name}</strong>
@@ -1765,11 +1839,12 @@ const generateResumePreview = () => {
                     <ul>
             `
             arrDetails.forEach((objDetail) => {
-                strHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
+                strSectionHTML += `<li class="resume-bullet-item">${objDetail.Detail}</li>`
             })
-            strHTML += '</ul></div>'
+            strSectionHTML += '</ul></div>'
         })
-        strHTML += '</section>'
+        strSectionHTML += '</section>'
+        objResumeSectionsByKey.projects = strSectionHTML
     }
 
 
@@ -1784,29 +1859,37 @@ const generateResumePreview = () => {
     })
 
     if (strSkillsSectionHTML) {
-        strHTML += `<section class="resume-preview-section"><h3>Skills</h3>${strSkillsSectionHTML}</section>`
+        objResumeSectionsByKey.skills = `<section class="resume-preview-section"><h3>Skills</h3>${strSkillsSectionHTML}</section>`
     }
 
 
     //Certs
     if (arrSelectedCerts.length) {
-        strHTML += '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
+        let strSectionHTML = '<section class="resume-preview-section"><h3>Certifications</h3><ul>'
         arrSelectedCerts.forEach((objCert) => {
-            strHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`
+            strSectionHTML += `<li><span class="fw-bold">${objCert.Name}</span> — ${objCert.Issuer} (${formatResumeMonthYear(objCert.DateEarned, false)})</li>`
         })
-        strHTML += '</ul></section>'
+        strSectionHTML += '</ul></section>'
+        objResumeSectionsByKey.certifications = strSectionHTML
     }
 
 
     
     //Awards
     if (arrSelectedAwards.length) {
-        strHTML += '<section class="resume-preview-section"><h3>Awards</h3><ul>'
+        let strSectionHTML = '<section class="resume-preview-section"><h3>Awards</h3><ul>'
         arrSelectedAwards.forEach((objAward) => {
-            strHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
+            strSectionHTML += `<li><span class="fw-bold">${objAward.Name}</span> — ${objAward.Issuer} (${formatResumeMonthYear(objAward.DateEarned, false)})${objAward.Description ? `: ${objAward.Description}` : ''}</li>`
         })
-        strHTML += '</ul></section>'
+        strSectionHTML += '</ul></section>'
+        objResumeSectionsByKey.awards = strSectionHTML
     }
+
+    arrResumeSectionOrder.forEach((strSectionKey) => {
+        if (objResumeSectionsByKey[strSectionKey]) {
+            strHTML += objResumeSectionsByKey[strSectionKey]
+        }
+    })
 
     document.querySelector('#divResumePreview').innerHTML = strHTML
     document.querySelector('#pResumeStatus').innerText = 'Resume preview generated.'
