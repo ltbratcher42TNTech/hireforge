@@ -4,6 +4,8 @@ const router = express.Router()
 const { v4: uuidv4 } = require('uuid')
 const db = require('../utils/db')
 const { sendSuccess, sendError, safeTrim, isValidLength, objFieldMaxLengths } = require('../utils/responses')
+//centralizes user scoping while auth and guest flows are future work.
+const { getCurrentUserID } = require('../utils/users')
 
 
 // POST to create education
@@ -21,9 +23,10 @@ router.post('/', (req,res,next) => {
         return sendError(res, 400, "Institution, degree, as well as start date are all required", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strQuery = `INSERT INTO tblEducation (EducationID, Institution, Degree, FieldOfStudy, StartDate, EndDate, GPA) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `INSERT INTO tblEducation (EducationID, Institution, Degree, FieldOfStudy, StartDate, EndDate, GPA, UserID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
-    db.run(strQuery, [strEducationID, strInstitution, strDegree, strFieldOfStudy, strStartDate, blnIsPresent ? null : strEndDate, strGPA], function(err){
+    db.run(strQuery, [strEducationID, strInstitution, strDegree, strFieldOfStudy, strStartDate, blnIsPresent ? null : strEndDate, strGPA, intUserID], function(err){
         if(err){
             console.error("Error creating education: ", err.message)
             return sendError(res, 500, "Failed to create eduction entry", { code: "SERVER_ERROR", details: {} })
@@ -45,9 +48,10 @@ router.post('/', (req,res,next) => {
 
 // GET all entries into education
 router.get('/', (req,res,next) => {
-    const strQuery = `SELECT * FROM tblEducation ORDER BY StartDate DESC`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `SELECT * FROM tblEducation WHERE UserID=? ORDER BY StartDate DESC`
 
-    db.all(strQuery, [],(err,arrRows) => {
+    db.all(strQuery, [intUserID],(err,arrRows) => {
         if (err) {
             console.error("Error Fetching Education:", err.message)
             return sendError(res, 500, "Failed to GET all education entries", { code: "SERVER_ERROR", details: {} })
@@ -72,9 +76,10 @@ router.put('/:id', (req,res,next) => {
         return sendError(res, 400, "Institution, degree, and start date are required", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strQuery = `UPDATE tblEducation SET Institution=?, Degree=?, FieldOfStudy=?, StartDate=?, EndDate=?, GPA=? WHERE EducationID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `UPDATE tblEducation SET Institution=?, Degree=?, FieldOfStudy=?, StartDate=?, EndDate=?, GPA=? WHERE EducationID=? AND UserID=?`
 
-    db.run(strQuery, [strInstitution, strDegree, strFieldOfStudy, strStartDate, blnIsPresent ? null : strEndDate, strGPA, strEducationID], function (err){
+    db.run(strQuery, [strInstitution, strDegree, strFieldOfStudy, strStartDate, blnIsPresent ? null : strEndDate, strGPA, strEducationID, intUserID], function (err){
         if (err){
             console.error("Error updating education entry: ", err.message)
             return sendError(res, 500, "Failed to update education entry", { code: "SERVER_ERROR", details: {} })
@@ -100,9 +105,10 @@ router.put('/:id', (req,res,next) => {
 // DELETE education entry
 router.delete('/:id', (req,res,next) => {
     const strEducationID = req.params.id
-    const strQuery = `DELETE FROM tblEducation WHERE EducationID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `DELETE FROM tblEducation WHERE EducationID=? AND UserID=?`
 
-    db.run(strQuery, [strEducationID], function (err){
+    db.run(strQuery, [strEducationID, intUserID], function (err){
         if (err){
             console.error("Error deleting education:", err.message)
             return sendError(res, 500, "Failed to delete education entry", { code: "SERVER_ERROR", details: {} })

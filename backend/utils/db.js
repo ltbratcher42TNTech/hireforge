@@ -11,4 +11,7 @@ const db = new sqlite3.Database('resume.db', (err) => {
     }
 })
 
+// Keeping SQLite foreign key enforcement enabled for the app connection.
+db.run("PRAGMA foreign_keys = ON")
+
 module.exports = db

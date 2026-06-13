@@ -24,7 +24,7 @@
         <main>
 
             <!-- Navigation -->
-            <nav aria-label="Main navigation" class="mb-4">
+            <nav aria-label="Main navigation" class="mb-4" id="mainNavigation">
                 <button class="btn btn-primary me-2 mb-2" id="btnNavDashboard">Dashboard</button>
                 <button class="btn btn-primary me-2 mb-2" id="btnNavProfile">Profile</button>
                 <button class="btn btn-primary me-2 mb-2" id="btnNavJobs">Jobs</button>
@@ -38,20 +38,88 @@
                 <button class="btn btn-primary me-2 mb-2" id="btnNavCoverLetter">Cover Letter</button>
                 <button class="btn btn-primary me-2 mb-2" id="btnNavThankYou">Thank You</button>
                 <button class="btn btn-primary me-2 mb-2" id="btnAboutDev">About The Dev</button>
+                <button class="btn btn-outline-danger me-2 mb-2" id="btnLogout" type="button">Logout</button>
+                <span class="text-muted small" id="spnCurrentUser" aria-live="polite"></span>
             </nav>
         </main>
 
+            <!-- AI assisted: authentication screens for login, registration, and recruiter guest mode. -->
+            <div id="authSection">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card p-4 mb-3">
+                            <h2 class="mb-3">Welcome to HireForge</h2>
+                            <p class="text-muted">Log in, create an account, or enter guest mode to preview the resume builder.</p>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h3 class="h5">Login</h3>
+                                    <input type="text" id="txtLoginUsername" class="form-control mb-2" placeholder="Username" aria-label="Login Username">
+                                    <input type="password" id="txtLoginPassword" class="form-control mb-2" placeholder="Password" aria-label="Login Password">
+                                    <button class="btn btn-primary" id="btnLogin" type="button">Login</button>
+                                </div>
+                                <div class="col-md-6">
+                                    <h3 class="h5">Register</h3>
+                                    <input type="text" id="txtRegisterUsername" class="form-control mb-2" placeholder="Username" aria-label="Register Username">
+                                    <input type="password" id="txtRegisterPassword" class="form-control mb-2" placeholder="Password (8+ characters)" aria-label="Register Password">
+                                    <button class="btn btn-success" id="btnRegister" type="button">Register</button>
+                                </div>
+                            </div>
+                            <hr>
+                            <button class="btn btn-info" id="btnGuestMode" type="button">Continue as Recruiter Guest</button>
+                            <p id="pAuthStatus" class="text-muted mt-3 mb-0" aria-live="polite"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
             <!-- Dashboard -->
-            <div id="dashboardSection">
-                <h2></h2>
+             <div id="dashboardSection" style="display:none;">
                 <h3>Dashboard</h3>
-                
-                <p class="lead">Welcome to HireForge. This is your all-in-one tool for building, refining, and generating job-ready materials.</p>
 
-                <p>Use the sections above to create your profile, add work experience, organize skills, and track certifications and awards. When you're ready, you can generate a polished resume, craft a tailored cover letter, or create a professional thank-you note which can then be sent to recruiters/interviewers after an interview.</p>
+                <p class="lead">
+                    Welcome to HireForge. This is your all-in-one tool for building,
+                    refining, and generating job-ready materials.
+                </p>
 
-                <p class="text-muted">Tip: Start with your profile, be sure to add your Google Gemini API key, then add jobs and bullet points before generating your resume.<p>
+                <p>
+                    Use the sections above to create your profile, add work experience,
+                    organize skills, and track certifications and awards. When you're ready,
+                    you can generate a polished resume, craft a tailored cover letter, or
+                    create a professional thank-you note that can be sent to recruiters or
+                    interviewers after an interview.
+                </p>
+
+                <div class="mt-3">
+                    <h5 class="mb-3">Getting Started</h5>
+
+                    <ol class="mb-3">
+                        <li>Complete your profile information.</li>
+                        <li>
+                            Create a Google Gemini API key through
+                            <a href="https://aistudio.google.com/app/apikey"
+                            target="_blank"
+                            rel="noopener noreferrer">
+                                Google AI Studio
+                            </a>.
+                        </li>
+                        <li>Copy your API key.</li>
+                        <li>Open the Profile section and paste the key into the Gemini API Key field.</li>
+                        <li>Click <strong>Save Gemini Key</strong>.</li>
+                        <li>Add jobs, projects, skills, education, certifications, and awards.</li>
+                        <li>Generate and refine your resume, cover letter, or thank-you letter.</li>
+                    </ol>
+
+                    <p class="mb-0">
+                        AI-powered features require a valid Google Gemini API key.
+                        Your key is stored locally for your account and can be updated or removed at any time.
+                    </p>
+                </div>
+
+                <p class="text-muted mt-3">
+                    Tip: Start with your profile, add your Google Gemini API key,
+                    then add jobs and bullet points before generating your resume.
+                </p>
             </div>
 
             <!-- Used codex to implement this, simply to see how it would do with little context -->
@@ -422,7 +490,7 @@
                     <li>Frontend: HTML, Bootstrap (Flatly theme), vanilla JavaScript</li>
                     <li>Backend: Node.js + Express</li>
                     <li>Storage: SQLite</li>
-                    <li>AI features: Google Gemini API (user-provided key required)</li>
+                    <li>AI features: Google Gemini API (user-provided API key required)</li>
                     </ul>
                 </div>
             </div>
@@ -463,6 +531,7 @@
 
 <script src="assets/bootstrap.bundle.min.js"></script>
 <script src="js/modules/configurations.js"></script>
+<script src="js/modules/auth.js"></script>
 <script src="js/modules/education.js"></script>
 <script src="js/modules/generated-docs.js"></script>
 <script src="js/modules/jobs.js"></script>
@@ -471,6 +540,6 @@
 <script src="js/modules/records-summary.js"></script>
 <script src="js/modules/resume-builder.js"></script>
 <script src="js/modules/skills.js"></script>
-<script src="js/app.js" defer></script>
+<script src="js/app.js"></script>
 </body>
 </html>

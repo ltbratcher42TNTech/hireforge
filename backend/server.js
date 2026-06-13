@@ -37,6 +37,7 @@ require('dotenv').config()
 
 const db = require('./utils/db')
 const { objFieldMaxLengths, sendSuccess, sendError, safeTrim, isValidLength } = require('./utils/responses')
+const { requireUser } = require('./utils/users')
 
 const app = express()
 const PORT = 8000
@@ -61,64 +62,71 @@ app.get('/', (req,res) => {
 
 
 // ===================================================================
+// AUTH ROUTES BELOW
+// ===================================================================
+
+app.use('/api/auth', require('./routes/auth'))
+
+
+// ===================================================================
 // PROFILE ROUTES BELOW
 // ===================================================================
 
-app.use('/api/profile', require('./routes/profile'))
+app.use('/api/profile', requireUser, require('./routes/profile'))
 
 // ===================================================================
 // JOB ROUTES
 // ===================================================================
-app.use('/api/jobs', require('./routes/jobs'))
-app.use('/api/details', require('./routes/details'))
+app.use('/api/jobs', requireUser, require('./routes/jobs'))
+app.use('/api/details', requireUser, require('./routes/details'))
 
 // ===================================================================
 // PROJECT ROUTES
 // ===================================================================
-app.use('/api/projects', require('./routes/projects'))
-app.use('/api/projectdetails', require('./routes/projectdetails'))
+app.use('/api/projects', requireUser, require('./routes/projects'))
+app.use('/api/projectdetails', requireUser, require('./routes/projectdetails'))
 
 // ===================================================================
 // SKILL CATEGORIES ROUTES BELOW
 // ===================================================================
 
-app.use('/api/skillcategories', require('./routes/skillcategories'))
+app.use('/api/skillcategories', requireUser, require('./routes/skillcategories'))
 
 // ===================================================================
 // SKILLS ROUTES BELOW
 // ===================================================================
 
-app.use('/api/skills', require('./routes/skills'))
+app.use('/api/skills', requireUser, require('./routes/skills'))
 
 // ===================================================================
 // CERTIFICATIONS ROUTES BELOW
 // ===================================================================
 
-app.use('/api/certifications', require('./routes/certifications'))
+app.use('/api/certifications', requireUser, require('./routes/certifications'))
 
 // ===================================================================
 // AWARDS ROUTES BELOW
 // ===================================================================
 
-app.use('/api/awards', require('./routes/awards'))
+app.use('/api/awards', requireUser, require('./routes/awards'))
 
 // ===================================================================
 // SUMMARY ROUTES BELOW
 // ===================================================================
 
-app.use('/api/summary', require('./routes/summary'))
+app.use('/api/summary', requireUser, require('./routes/summary'))
 
 // ===================================================================
 // EDUCATION ROUTES BELOW
 // ===================================================================
 
-app.use('/api/education', require('./routes/education'))
+app.use('/api/education', requireUser, require('./routes/education'))
 
 // ===================================================================
 // AI ROUTES BELOW
 // ===================================================================
 
-app.use('/api/ai', require('./routes/ai'))
+app.use('/api/ai', requireUser, require('./routes/ai'))
 
 
 // Start server
