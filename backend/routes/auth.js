@@ -96,6 +96,46 @@ router.get('/me', requireUser, (req,res,next) => {
     return sendSuccess(res, 200, 'Current user retrieved', { user: req.objUser })
 })
 
+// PUT change password
+router.put('/password', requireUser, (req,res,next) => {
+    const strCurrentPassword = safeTrim(req.body.currentPassword)
+    const strNewPassword = safeTrim(req.body.newPassword)
+
+    if (!strCurrentPassword || !strNewPassword){
+        return sendError(res, 400, 'Both the current and the new password are required', { code: 'VALIDATION_ERROR', details: {} })
+    }
+
+    if (strNewPassword.length < 8){
+        return sendError(res, 400, 'New password must be at least 8 characters in length', { code: 'VALIDATION_ERROR', details: {} })
+    }
+
+    const intUserID = req.intUserID
+    const strQuery = `SELECT PasswordHash FROM tblUsers WHERE UserID = ? LIMIT 1`
+
+    db.get(strQuery, [intUserID], (err, objUser) => {
+        if (err){
+            console.error('Error fetching user:', err.message)
+            return sendError(res, 500, 'Failed to change password', { code: 'SERVER_ERROR', details: {} })
+        }
+
+        if (!objUser || !verifyPassword(strCurrentPassword, objUser.PasswordHash)){
+            return sendError(res, 401, 'Current password is incorrect', { code: 'UNAUTHORIZED', details: {} })
+        }
+
+        const strNewHash = hashPassword(strNewPassword)
+        const strUpdateQuery = `UPDATE tblUsers SET PasswordHash = ? WHERE UserID = ?`
+
+        db.run(strUpdateQuery, [strNewHash, intUserID], function (err) {
+            if (err){
+                console.error('Error updating password:', err.message)
+                return sendError(res, 500, 'Failed to change password', { code: 'SERVER_ERROR', details: {} })
+            }
+
+            return sendSuccess(res, 200, 'Password changed successfully', {})
+        })
+    })
+})
+
 
 
 module.exports = router
