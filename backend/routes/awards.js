@@ -4,6 +4,8 @@ const router = express.Router()
 const { v4: uuidv4 } = require('uuid')
 const db = require('../utils/db')
 const { sendSuccess, sendError, safeTrim, isValidLength, objFieldMaxLengths } = require('../utils/responses')
+//centralizes user scoping while auth and guest flows are future work.
+const { getCurrentUserID } = require('../utils/users')
 
 // POST new award
 router.post('/', (req,res,next) => {
@@ -17,9 +19,10 @@ router.post('/', (req,res,next) => {
         return sendError(res, 400, "Name and date earned are required", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strQuery = `INSERT INTO tblAwards (AwardID, Name, Issuer, DateEarned, Description) VALUES (?, ?, ?, ?, ?)`
-
-    db.run(strQuery, [strAwardID, strName, strIssuer, strDateEarned, strDescription], (err) => {
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `INSERT INTO tblAwards (AwardID, Name, Issuer, DateEarned, Description, UserID) VALUES (?, ?, ?, ?, ?, ?)`
+    
+    db.run(strQuery, [strAwardID, strName, strIssuer, strDateEarned, strDescription, intUserID], (err) => {
         if (err) {
             console.error("Error creating award:", err.message)
             return sendError(res, 500, "Failed to create award", { code: "SERVER_ERROR", details: {} })
@@ -32,9 +35,10 @@ router.post('/', (req,res,next) => {
 
 // GET all awards
 router.get('/', (req,res,next) => {
-    const strQuery = `SELECT * FROM tblAwards ORDER BY DateEarned DESC`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `SELECT * FROM tblAwards WHERE UserID=? ORDER BY DateEarned DESC`
 
-    db.all(strQuery, [], (err, arrRows) => {
+    db.all(strQuery, [intUserID], (err, arrRows) => {
         if (err) {
             console.error("Error fetching awards:", err.message)
             return sendError(res, 500, "Failed to get awards", { code: "SERVER_ERROR", details: {} })
@@ -47,9 +51,10 @@ router.get('/', (req,res,next) => {
 router.delete('/:id', (req,res,next) => {
     const strAwardID = req.params.id
 
-    const strQuery = `DELETE FROM tblAwards WHERE AwardID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `DELETE FROM tblAwards WHERE AwardID=? AND UserID=?`
 
-    db.run(strQuery, [strAwardID], function (err) {
+    db.run(strQuery, [strAwardID, intUserID], function (err) {
         if (err) {
             console.error("Error deleting award:", err.message)
             return sendError(res, 500, "Failed to delete award", { code: "SERVER_ERROR", details: {} })

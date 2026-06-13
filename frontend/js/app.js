@@ -3,6 +3,7 @@
 // ===================================================
 
 const showSection = (strSectionName) => {
+    document.getElementById('authSection').style.display = 'none'
     document.getElementById('dashboardSection').style.display = 'none'
     document.getElementById('profileSection').style.display = 'none'
     document.getElementById('jobsSection').style.display = 'none'
@@ -81,3 +82,11 @@ document.querySelector('#btnNavThankYou').addEventListener('click', () => {
 document.querySelector('#btnAboutDev').addEventListener('click', () => {
     showSection('aboutDev')
 })
+
+//auth button wiring and initial page protection.
+document.querySelector('#btnLogin').addEventListener('click', loginUser)
+document.querySelector('#btnRegister').addEventListener('click', registerUser)
+document.querySelector('#btnGuestMode').addEventListener('click', startGuestMode)
+document.querySelector('#btnLogout').addEventListener('click', logoutUser)
+
+requireFrontendAuth()

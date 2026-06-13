@@ -1,5 +1,6 @@
 node_modules/
 .env
 resume.db
+resume_backup.db
 AGENTS.md
 required_statements/
