@@ -128,11 +128,14 @@ window.fetch = (objResource, objOptions = {}) => {
     }
 
     return objOriginalFetch(objResource, { ...objOptions, headers: objHeaders }).then((objResponse) => {
-        if (objResponse.status === 401 && isLoggedIn()){
-            clearAuthSession()
-            updateAuthDisplay()
-            showAuthSection()
+        if (objResponse.status === 401 && isLoggedIn()) {
+            const strURL = typeof objResource === 'string' ? objResource : objResource.url
+            if (!strURL.includes('/api/auth/password')) {
+                clearAuthSession()
+                updateAuthDisplay()
+                showAuthSection()
+            }
         }
         return objResponse
-    })
+})
 }
