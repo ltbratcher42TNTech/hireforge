@@ -16,71 +16,83 @@ Run before merging or deploying.
 ---
 
 # Jobs
-- [ ] Can add job
-- [ ] Can edit job
-- [ ] Can delete job
-- [ ] Can add bullet/details
-- [ ] Can delete bullet/details
-- [ ] Empty job entries rejected
-
----
-
-# Skills
-- [ ] Can add skill
-- [ ] Can delete skill
-- [ ] Empty skill rejected
-
----
-
-# Certifications
-- [ ] Can add certification
-- [ ] Can delete certification
-
----
-
-# Awards
-- [ ] Can add award
-- [ ] Can delete award
+- [ x ] Can add job
+- [ x ] Can delete job
+- [ x ] Can add bullet/details
+- [ x ] Can delete bullet/details
+- [ x ] Empty job entries rejected
 
 ---
 
 # Education
-- [ ] Can add education
-- [ ] Can edit education
-- [ ] Can delete education
-- [ ] Empty education rejected
+- [ x ] Can add education
+- [ x ] Can edit education
+- [ x ] Can delete education
+- [ x ] Empty education rejected
+
+
+---
+
+# Projects
+- [ x ] Can add project
+- [ x ] Can delete project
+- [ x ] Can edit project
+- [ x ] Can add bullet/details
+- [ x ] Can delete bullet/details
+- [ x ] Empty project entries rejected
+
+---
+
+# Skills and categories
+- [ x ] Can add skill/category
+- [ x ] Can delete skill/category
+- [ x ] Empty skill/category rejected
+
+---
+
+# Certifications
+- [ x ] Can add certification
+- [ x ] Can delete certification
+- [ x ] Empty rejected
+
+---
+
+# Awards
+- [ x ] Can add award
+- [ x ] Can delete award
+- [ x ] Empty rejected
 
 ---
 
 # Resume Preview
-- [ ] Preview renders correctly
-- [ ] Hidden sections stay hidden
-- [ ] Empty sections do not render
-- [ ] Formatting remains aligned
+- [ x ] Preview renders correctly
+- [ x ] Hidden sections stay hidden
+- [ x ] Empty sections do not render
+- [ x ] Formatting remains aligned
 
 ---
 
 # PDF
-- [ ] PDF generates successfully
-- [ ] PDF spacing looks correct
-- [ ] No overlapping text
-- [ ] Hidden sections excluded from PDF
+- [ x ] PDF generates successfully
+- [ x ] PDF spacing looks correct
+- [ x ] No overlapping text
+- [ x ] Hidden sections excluded from PDF
 
 ---
 
 # Validation
-- [ ] Whitespace-only input rejected
-- [ ] Extremely long input handled safely
-- [ ] Invalid dates handled safely
+- [ x ] Whitespace-only input rejected
+- [ x ] Extremely long input handled safely
+- [ x ] Invalid dates handled safely
 
 ---
 
 # Error Handling
-- [ ] User sees readable error messages
-- [ ] App does not crash on invalid input
-- [ ] Failed API requests handled gracefully
+- [ x ] User sees readable error messages
+- [ x ] App does not crash on invalid input
+- [ x ] Failed API requests handled gracefully
 
 ---
 
 # Bugs (added as appeared)
-- [ ] When a resume is generated, it (sometimes) seems to create a new blank page. Not sure how to fix it yet, but it's purely cosmetic and the easy workaround is to just ignore the blank page or delete it when you download a PDF.
+- Slight issue when adding certs and awards, will resolve later
