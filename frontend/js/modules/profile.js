@@ -139,17 +139,18 @@ document.querySelector('#btnSaveProfile').addEventListener('click', async () => 
     document.querySelector('#pProfileStatus').innerText = 'Profile saved successfully.'
 })
 
+// AI Assisted, button to change password
 document.querySelector('#btnChangePassword').addEventListener('click', async () => {
     const strCurrentPassword = document.querySelector('#txtCurrentPassword').value.trim()
     const strNewPassword = document.querySelector('#txtNewPassword').value.trim()
     const strConfirmPassword = document.querySelector('#txtConfirmPassword').value.trim()
 
-    if (!strCurrentPassword || !strNewPassword || !strConfirmPassword) {
+    if (!strCurrentPassword || !strNewPassword || !strConfirmPassword){
         document.querySelector('#pPasswordStatus').innerText = 'All password fields are required.'
         return
     }
 
-    if (strNewPassword !== strConfirmPassword) {
+    if (strNewPassword !== strConfirmPassword){
         document.querySelector('#pPasswordStatus').innerText = 'New passwords do not match.'
         return
     }

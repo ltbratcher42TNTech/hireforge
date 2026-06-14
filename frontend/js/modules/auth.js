@@ -127,6 +127,7 @@ window.fetch = (objResource, objOptions = {}) => {
         objHeaders.set('Authorization', `Bearer ${strToken}`)
     }
 
+    // AI assisted: fixed this so it doesn't log you out aggressively just due to 401 due to incorrect password when changing it
     return objOriginalFetch(objResource, { ...objOptions, headers: objHeaders }).then((objResponse) => {
         if (objResponse.status === 401 && isLoggedIn()) {
             const strURL = typeof objResource === 'string' ? objResource : objResource.url
