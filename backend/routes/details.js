@@ -4,14 +4,17 @@ const router = express.Router()
 const { v4: uuidv4 } = require('uuid')
 const db = require('../utils/db')
 const { sendSuccess, sendError, safeTrim, isValidLength, objFieldMaxLengths } = require('../utils/responses')
+//centralizes user scoping while auth and guest flows are future work.
+const { getCurrentUserID } = require('../utils/users')
 
 // DELETE for if you wanna delete a detail
 router.delete('/:id', (req,res,next) => {
     const strDetailID = req.params.id
 
-    const strQuery = `DELETE FROM tblJobDetails WHERE DetailID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `DELETE FROM tblJobDetails WHERE DetailID=? AND UserID=?`
 
-    db.run(strQuery, [strDetailID], function (err) {
+    db.run(strQuery, [strDetailID, intUserID], function (err) {
         if (err) {
             console.error("Error deleting detail:", err.message)
             return sendError(res, 500, "Failed to delete detail", { code: "SERVER_ERROR", details: {} })

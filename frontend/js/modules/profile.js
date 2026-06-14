@@ -138,3 +138,43 @@ document.querySelector('#btnSaveProfile').addEventListener('click', async () => 
     strCurrentProfileID = objSavedProfile.ProfileID
     document.querySelector('#pProfileStatus').innerText = 'Profile saved successfully.'
 })
+
+// AI Assisted, button to change password
+document.querySelector('#btnChangePassword').addEventListener('click', async () => {
+    const strCurrentPassword = document.querySelector('#txtCurrentPassword').value.trim()
+    const strNewPassword = document.querySelector('#txtNewPassword').value.trim()
+    const strConfirmPassword = document.querySelector('#txtConfirmPassword').value.trim()
+
+    if (!strCurrentPassword || !strNewPassword || !strConfirmPassword){
+        document.querySelector('#pPasswordStatus').innerText = 'All password fields are required.'
+        return
+    }
+
+    if (strNewPassword !== strConfirmPassword){
+        document.querySelector('#pPasswordStatus').innerText = 'New passwords do not match.'
+        return
+    }
+
+    if (strNewPassword.length < 8) {
+        document.querySelector('#pPasswordStatus').innerText = 'New password must be at least 8 characters.'
+        return
+    }
+
+    const objResponse = await fetch(`${strBaseURL}/api/auth/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: strCurrentPassword, newPassword: strNewPassword })
+    })
+
+    const objData = await objResponse.json()
+
+    if (objResponse.status !== 200) {
+        document.querySelector('#pPasswordStatus').innerText = objData.message
+        return
+    }
+
+    document.querySelector('#txtCurrentPassword').value = ''
+    document.querySelector('#txtNewPassword').value = ''
+    document.querySelector('#txtConfirmPassword').value = ''
+    document.querySelector('#pPasswordStatus').innerText = 'Password changed successfully.'
+})

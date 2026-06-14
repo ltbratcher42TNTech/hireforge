@@ -4,6 +4,7 @@
 const sqlite3 = require('sqlite3').verbose()
 
 const strDBPath = './resume.db'
+const intDefaultUserID = 1
 
 const db = new sqlite3.Database(strDBPath, (err) => {
     if (err) {
@@ -18,10 +19,61 @@ db.run("PRAGMA foreign_keys = ON")
 
 db.serialize(() => {
 
+    // Gave up the idea of migrating my data, I backed it up and will manually migrate, this will ensure tables are rebuilt from scratch
+    strQuery = `DROP TABLE IF EXISTS tblJobDetails`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblProjectDetails`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblSkills`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblProfile`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblJobs`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblProjects`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblSkillCategories`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblCertifications`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblAwards`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblSummary`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblEducation`
+    db.run(strQuery)
+
+    strQuery = `DROP TABLE IF EXISTS tblUsers`
+    db.run(strQuery)
+
+    // =====================================================
+    // USERS
+    // =====================================================
+    strQuery = `
+        CREATE TABLE IF NOT EXISTS tblUsers (
+            UserID INTEGER PRIMARY KEY,
+            Username TEXT NOT NULL UNIQUE,
+            PasswordHash TEXT NOT NULL DEFAULT '',
+            IsGuest INTEGER NOT NULL DEFAULT 0,
+            CreatedDate TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    `
+    db.run(strQuery)
+
     // =====================================================
     // PROFILE
     // =====================================================
-    let strQuery = `
+    strQuery = `
         CREATE TABLE IF NOT EXISTS tblProfile (
             ProfileID TEXT PRIMARY KEY,
             FullName TEXT,
@@ -30,7 +82,9 @@ db.serialize(() => {
             Location TEXT,
             LinkedIn TEXT,
             GitHub TEXT,
-            Website TEXT
+            Website TEXT,
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -44,7 +98,9 @@ db.serialize(() => {
             Title TEXT,
             Company TEXT,
             StartDate TEXT,
-            EndDate TEXT
+            EndDate TEXT,
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -60,7 +116,9 @@ db.serialize(() => {
             DetailID TEXT PRIMARY KEY,
             JobID TEXT,
             Detail TEXT,
-            FOREIGN KEY (JobID) REFERENCES tblJobs(JobID) ON DELETE CASCADE
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (JobID) REFERENCES tblJobs(JobID) ON DELETE CASCADE,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -72,7 +130,9 @@ db.serialize(() => {
         CREATE TABLE IF NOT EXISTS tblProjects (
             ProjectID TEXT PRIMARY KEY,
             Name TEXT,
-            URL TEXT
+            URL TEXT,
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -85,7 +145,9 @@ db.serialize(() => {
             DetailID TEXT PRIMARY KEY,
             ProjectID TEXT,
             Detail TEXT,
-            FOREIGN KEY (ProjectID) REFERENCES tblProjects(ProjectID) ON DELETE CASCADE
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (ProjectID) REFERENCES tblProjects(ProjectID) ON DELETE CASCADE,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -96,7 +158,9 @@ db.serialize(() => {
     strQuery = `
         CREATE TABLE IF NOT EXISTS tblSkillCategories (
             CategoryID TEXT PRIMARY KEY,
-            Name TEXT
+            Name TEXT,
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -109,7 +173,9 @@ db.serialize(() => {
             SkillID TEXT PRIMARY KEY,
             CategoryID TEXT,
             Name TEXT,
-            FOREIGN KEY (CategoryID) REFERENCES tblSkillCategories(CategoryID) ON DELETE CASCADE
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (CategoryID) REFERENCES tblSkillCategories(CategoryID) ON DELETE CASCADE,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -122,7 +188,9 @@ db.serialize(() => {
             CertID TEXT PRIMARY KEY,
             Name TEXT,
             Issuer TEXT,
-            DateEarned TEXT
+            DateEarned TEXT,
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -136,7 +204,9 @@ db.serialize(() => {
             Name TEXT,
             Issuer TEXT,
             DateEarned TEXT,
-            Description TEXT
+            Description TEXT,
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -147,7 +217,9 @@ db.serialize(() => {
     strQuery = `
         CREATE TABLE IF NOT EXISTS tblSummary (
             SummaryID TEXT PRIMARY KEY,
-            Content TEXT NOT NULL
+            Content TEXT NOT NULL,
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
@@ -163,11 +235,14 @@ db.serialize(() => {
             FieldOfStudy TEXT,
             StartDate TEXT,
             EndDate TEXT,
-            GPA TEXT
+            GPA TEXT,
+            UserID INTEGER NOT NULL,
+            FOREIGN KEY (UserID) REFERENCES tblUsers(UserID) ON DELETE CASCADE
         )
     `
     db.run(strQuery)
 
+    
     console.log("All tables created successfully if they didn't exist.")
 })
 

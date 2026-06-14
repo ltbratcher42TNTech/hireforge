@@ -4,6 +4,8 @@ const router = express.Router()
 const { v4: uuidv4 } = require('uuid')
 const db = require('../utils/db')
 const { sendSuccess, sendError, safeTrim, isValidLength, objFieldMaxLengths } = require('../utils/responses')
+//centralizes user scoping while auth and guest flows are future work.
+const { getCurrentUserID } = require('../utils/users')
 
 // ===================================================================
 // JOB ROUTES BELOW
@@ -32,9 +34,10 @@ router.post('/', (req,res,next) => {
         return sendError(res, 400, "Job field length is invalid", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strQuery = `INSERT INTO tblJobs (JobID, Title, Company, StartDate, EndDate) VALUES (?, ?, ?, ?, ?)`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `INSERT INTO tblJobs (JobID, Title, Company, StartDate, EndDate, UserID) VALUES (?, ?, ?, ?, ?, ?)`
 
-    db.run(strQuery, [strJobID, strTitle, strCompany, strStartDate, strEndDate], function (err){
+    db.run(strQuery, [strJobID, strTitle, strCompany, strStartDate, strEndDate, intUserID], function (err){
         if(err){
             console.error("Insert Error:", err.message)
             return sendError(res, 500, "Failed to create the job", { code: "SERVER_ERROR", details: {} })
@@ -53,9 +56,10 @@ router.post('/', (req,res,next) => {
 
 // GET ALL of the jobs route
 router.get('/', (req,res,next) => {
-    const strQuery = `SELECT * FROM tblJobs ORDER BY StartDate DESC`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `SELECT * FROM tblJobs WHERE UserID=? ORDER BY StartDate DESC`
 
-    db.all(strQuery,[],function (err,arrRows) {
+    db.all(strQuery,[intUserID],function (err,arrRows) {
 
         if (err) {
             console.error("Error Fetching:", err.message)
@@ -78,9 +82,10 @@ router.put('/:id', (req,res,next) => {
         return sendError(res, 400, "All fields are required", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strQuery = `UPDATE tblJobs SET Title=?, Company=?, StartDate=?, EndDate=? WHERE JobID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `UPDATE tblJobs SET Title=?, Company=?, StartDate=?, EndDate=? WHERE JobID=? AND UserID=?`
 
-    db.run(strQuery, [strTitle, strCompany, strStartDate, strEndDate, strJobID], function (err) {
+    db.run(strQuery, [strTitle, strCompany, strStartDate, strEndDate, strJobID, intUserID], function (err) {
         if (err) {
             console.error("Error updating job:", err.message)
             return sendError(res, 500, "Failed to update job", { code: "SERVER_ERROR", details: {} })
@@ -95,9 +100,11 @@ router.put('/:id', (req,res,next) => {
 router.delete('/:id', (req,res,next) => {
     const strJobID = req.params.id
 
-    const strQuery = `DELETE FROM tblJobs WHERE JobID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `DELETE FROM tblJobs WHERE JobID=? AND UserID=?`
 
-    db.run(strQuery, [strJobID], function (err) {
+
+    db.run(strQuery, [strJobID, intUserID], function (err) {
         if (err) {
             console.error("Error deleting job:", err.message)
             return sendError(res, 500, "Failed to delete job", { code: "SERVER_ERROR", details: {} })
@@ -126,13 +133,17 @@ router.post('/:id/details', (req,res,next) => {
         return sendError(res, 400, "Detail text exceeds max length", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strQuery = `INSERT INTO tblJobDetails (DetailID, JobID, Detail) VALUES (?, ?, ?)`
+    const intUserID = getCurrentUserID(req)
+    // AI assisted query which apparently improves efficiency!
+    const strQuery = `INSERT INTO tblJobDetails (DetailID, JobID, Detail, UserID) SELECT ?, JobID, ?, ? FROM tblJobs WHERE JobID=? AND UserID=?`
 
-    db.run(strQuery, [strDetailID, strJobID, strDetail], (err) => {
+    db.run(strQuery, [strDetailID, strDetail, intUserID, strJobID, intUserID], function (err) {
         if (err) {
             console.error("Error creating detail:", err.message)
             return sendError(res, 500, "Failed to create detail", { code: "SERVER_ERROR", details: {} })
         }
+        // Database brick-walled the request because user doesn't own this JobID. AKA Gaslight bad actors with a 404 so they don't know if the ID is real.
+        if (this.changes === 0) return sendError(res, 404, "Job not found", { code: "NOT_FOUND", details: {} })
         const objDetail = { DetailID: strDetailID, JobID: strJobID, Detail: strDetail }
         return sendSuccess(res, 201, "Detail created successfully", { detail: objDetail })
     })
@@ -143,9 +154,10 @@ router.post('/:id/details', (req,res,next) => {
 router.get('/:id/details', (req,res,next) => {
     const strJobID = req.params.id
 
-    const strQuery = `SELECT * FROM tblJobDetails WHERE JobID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `SELECT * FROM tblJobDetails WHERE JobID=? AND UserID=?`
 
-    db.all(strQuery, [strJobID], (err, arrRows) => {
+    db.all(strQuery, [strJobID, intUserID], (err, arrRows) => {
         if (err) {
             console.error("Error fetching the job details:", err.message)
             return sendError(res, 500, "Failed to get the job details", { code: "SERVER_ERROR", details: {} })

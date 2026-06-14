@@ -4,6 +4,8 @@ const router = express.Router()
 const { v4: uuidv4 } = require('uuid')
 const db = require('../utils/db')
 const { sendSuccess, sendError, safeTrim, isValidLength, objFieldMaxLengths } = require('../utils/responses')
+//centralizes user scoping while auth and guest flows are future work.
+const { getCurrentUserID } = require('../utils/users')
 
 // POST create profile
 router.post('/', (req,res,next) => {
@@ -20,9 +22,10 @@ router.post('/', (req,res,next) => {
             return sendError(res, 400, "Full name and email are required", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strCheckQuery = `SELECT ProfileID FROM tblProfile LIMIT 1`
+    const intUserID = getCurrentUserID(req)
+    const strCheckQuery = `SELECT ProfileID FROM tblProfile WHERE UserID=? LIMIT 1`
 
-    db.get(strCheckQuery, [], (err, objRow) => {
+    db.get(strCheckQuery, [intUserID], (err, objRow) => {
         if (err){
             console.error("Error checking existing profile:", err.message)
             return sendError(res, 500, "Failed to check profile", { code: "SERVER_ERROR" })
@@ -31,9 +34,9 @@ router.post('/', (req,res,next) => {
         if (objRow){
             return sendError(res, 409, "Profile already exists. Please edit profile instead.", { code: "CONFLICT", details: {} })        }
 
-        const strInsertQuery = `INSERT INTO tblProfile (ProfileID, FullName, Email, Phone, Location, LinkedIn, GitHub, Website) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-
-        db.run(strInsertQuery, [strProfileID, strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite], (err) => {
+        const strInsertQuery = `INSERT INTO tblProfile (ProfileID, FullName, Email, Phone, Location, LinkedIn, GitHub, Website, UserID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        
+        db.run(strInsertQuery, [strProfileID, strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite, intUserID], (err) => {
             if (err){
                 console.error("Error creating profile:", err.message)
                 return sendError(res, 500, "Failed to create profile", { code: "SERVER_ERROR", details: {} })
@@ -57,9 +60,10 @@ router.post('/', (req,res,next) => {
 
 // GET profile
 router.get('/', (req,res,next) => {
-    const strQuery = `SELECT * FROM tblProfile LIMIT 1`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `SELECT * FROM tblProfile WHERE UserID=? LIMIT 1`
 
-    db.get(strQuery, [], (err, objRow) => {
+    db.get(strQuery, [intUserID], (err, objRow) => {
         if (err){
             console.error("Error getting profile:", err.message)
             return sendError(res, 500, "Failed to get profile", { code: "SERVER_ERROR", details: {} })
@@ -94,9 +98,10 @@ router.put('/:id', (req,res,next) => {
         return sendError(res, 400, "Profile field length is invalid", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strQuery = `UPDATE tblProfile SET FullName=?, Email=?, Phone=?, Location=?, LinkedIn=?, GitHub=?, Website=? WHERE ProfileID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `UPDATE tblProfile SET FullName=?, Email=?, Phone=?, Location=?, LinkedIn=?, GitHub=?, Website=? WHERE ProfileID=? AND UserID=?`
 
-    db.run(strQuery, [strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite, strProfileID], function (err) {
+    db.run(strQuery, [strFullName, strEmail, strPhone, strLocation, strLinkedIn, strGitHub, strWebsite, strProfileID, intUserID], function (err) {
         if (err){
             console.error("Error updating profile:", err.message)
             return sendError(res, 500, "Failed to update profile", { code: "SERVER_ERROR", details: {} })

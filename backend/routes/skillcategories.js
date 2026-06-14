@@ -4,6 +4,8 @@ const router = express.Router()
 const { v4: uuidv4 } = require('uuid')
 const db = require('../utils/db')
 const { sendSuccess, sendError, safeTrim, isValidLength, objFieldMaxLengths } = require('../utils/responses')
+//centralizes user scoping while auth and guest flows are future work.
+const { getCurrentUserID } = require('../utils/users')
 
 // POST new skill category
 router.post('/', (req,res,next) => {
@@ -19,9 +21,10 @@ router.post('/', (req,res,next) => {
         return sendError(res, 400, "Category name exceeds max length", { code: "VALIDATION_ERROR", details: {} })
     }
 
-    const strQuery = `INSERT INTO tblSkillCategories (CategoryID, Name) VALUES (?, ?)`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `INSERT INTO tblSkillCategories (CategoryID, Name, UserID) VALUES (?, ?, ?)`
 
-    db.run(strQuery, [strCategoryID, strName], (err) => {
+    db.run(strQuery, [strCategoryID, strName, intUserID], (err) => {
         if (err) {
             console.error("Error creating skill category:", err.message)
             return sendError(res, 500, "Failed to create skill category", { code: "SERVER_ERROR", details: {} })
@@ -33,9 +36,10 @@ router.post('/', (req,res,next) => {
 
 // GET all skill categories
 router.get('/', (req,res,next) => {
-    const strQuery = `SELECT * FROM tblSkillCategories ORDER BY Name`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `SELECT * FROM tblSkillCategories WHERE UserID=? ORDER BY Name`
 
-    db.all(strQuery, [], (err, arrRows) => {
+    db.all(strQuery, [intUserID], (err, arrRows) => {
         if (err) {
             console.error("Error fetching skill categories:", err.message)
             return sendError(res, 500, "Failed to get skill categories", { code: "SERVER_ERROR", details: {} })
@@ -48,9 +52,10 @@ router.get('/', (req,res,next) => {
 router.delete('/:id', (req,res,next) => {
     const strCategoryID = req.params.id
 
-    const strQuery = `DELETE FROM tblSkillCategories WHERE CategoryID=?`
+    const intUserID = getCurrentUserID(req)
+    const strQuery = `DELETE FROM tblSkillCategories WHERE CategoryID=? AND UserID=?`
 
-    db.run(strQuery, [strCategoryID], function (err) {
+    db.run(strQuery, [strCategoryID, intUserID], function (err) {
         if (err) {
             console.error("Error deleting skill category:", err.message)
             return sendError(res, 500, "Failed to delete skill category", { code: "SERVER_ERROR", details: {} })
