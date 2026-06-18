@@ -1,30 +1,31 @@
 # HireForge
 
-A local-first resume and job application toolkit powered by AI. Build tailored resumes, cover letters, and thank-you notes in minutes!
+A resume and job application toolkit powered by AI. Build tailored resumes, cover letters, and thank-you notes in minutes.
 
 ---
 
 ## Features
 
-- **Resume Builder** — Generate clean, printable resumes from your profile, experience, skills, certifications, projects,and awards
-- **Selective Experience** — Choose exactly which roles, bullets, and skills to include per resume
-- **Section Ordering** — Reorganize resume sections before generating for maximum control
+- **Resume Builder** — Generate clean, printable resumes from your profile, professional summary, education, work experience, projects, skills, certifications, and awards
+- **Resume Preview & Printing** — Preview resumes before exporting and print directly from the application
+- **Selective Experience** — Choose exactly which profile fields, education entries, jobs, projects, bullet points, skills, certifications, and awards to include in each resume
+- **Section Ordering** — Reorganize resume sections before generating for maximum control over resume structure
 - **AI Bullet Enhancement** — Improve job description bullets using Google Gemini for stronger, more impactful wording
 - **AI Resume Polish** — Polish all resume bullets at once with one click
 - **Cover Letter Generator** — Create tailored cover letters with control over tone, length, paragraph count, and which experiences to highlight
-- **Thank-You Letter Generator** — Generate a professional post-interview thank-you in JUST seconds
+- **Thank-You Letter Generator** — Generate a professional post-interview thank-you in JUST seconds utilizing interview specific notes
 - **Profile** — Store your contact info, LinkedIn, GitHub, and website to display right on the top of your resume
+- **Professional Summary** — Maintain a reusable professional summary that can be included in generated resumes
 - **Jobs** — Track work experience with per-job bullet points, which you can choose to include or exclude
-- **Projects** — Track side projects with bullet points and URLs, separated from job experience
-- **Education** — Store degrees, institutions, dates, and GPA
+- **Projects** — Track projects with URLs and resume-ready bullet points separate from work experience
+- **Education** — Store education history, degree information, field of study, dates, and, optionally, your GPA
 - **Skills** — Organize skills into custom categories
 - **Certifications** — Track certifications with issuer and date
 - **Awards** — Track awards and honors with descriptions
-- **Professional Summary** — Store and include a summary statement on your resume
 - **User Accounts** — Register and log in with a username and password. Your data is scoped to your account only
 - **Change Password** — Update your password from the profile section
-- **Recruiter Guest Mode** — Try out the full app instantly with pre-seeded demo data, no sign-up required (AI features excluded unless you add your API key)
-- **Gemini API Key Management** — Your key is stored safely in your browser only, never on the server
+- **Guest Mode** — Try out the full app instantly with pre-seeded demo data, no sign-up required (AI features require your own Gemini API key)
+- **Gemini API Key Management** — Your key is stored safely in your browser only, and is only used for direct requests to Gemini
 - **Flexible Runtime** — Run in the browser or launch as a standalone desktop app via Electron
 
 ---
@@ -32,7 +33,7 @@ A local-first resume and job application toolkit powered by AI. Build tailored r
 ## How It Works
 
 1. Register or continue as a guest
-2. Enter your profile, summary, experience, projects, skills, certifications, and awards
+2. Enter your profile, summary, education, experience, projects, skills, certifications, and awards
 3. Add your Gemini API key in the Profile section to enable AI features (optional, but very useful)
 4. Select what to include and arrange section order
 5. Generate a resume, cover letter, or thank-you letter
@@ -106,7 +107,7 @@ Launches HireForge as a standalone Electron window, no browser necessary.
 
 ## Guest Mode
 
-Click **Continue as Recruiter Guest** on the login screen to instantly access a fully populated demo account. No registration required. Guest accounts are seeded with realistic sample data so you can explore every feature immediately.
+Click **Continue as Guest** on the login screen to instantly access a fully populated demo account. No registration required. Guest accounts are seeded with realistic sample data so you can explore every feature immediately.
 
 ---
 
