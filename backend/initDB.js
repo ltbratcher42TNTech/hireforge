@@ -61,7 +61,7 @@ db.serialize(() => {
     // =====================================================
     strQuery = `
         CREATE TABLE IF NOT EXISTS tblUsers (
-            UserID INTEGER PRIMARY KEY,
+            UserID INTEGER PRIMARY KEY AUTOINCREMENT,
             Username TEXT NOT NULL UNIQUE,
             PasswordHash TEXT NOT NULL DEFAULT '',
             IsGuest INTEGER NOT NULL DEFAULT 0,
