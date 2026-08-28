@@ -19,7 +19,7 @@ const callGemini = async (objOptions) => {
         }
     }
 
-    const strModel = "gemini-2.5-flash"
+    const strModel = "gemini-3.6-flash"
 
     const strURL = `https://generativelanguage.googleapis.com/v1beta/models/${strModel}:generateContent`
 
