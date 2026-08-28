@@ -21,7 +21,7 @@ const callGemini = async (objOptions) => {
 
     const strModel = "gemini-3.6-flash"
 
-    const strURL = `https://generativelanguage.googleapis.com/v1beta/models/${strModel}:generateContent`
+    const strURL = `https://googleapis.com{strModel}:generateContent`
 
     console.log('Using API key:', strApiKey.substring(0, 8) + '...')
     console.log('Model:', strModel)
