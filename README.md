@@ -132,8 +132,6 @@ Launches HireForge as a standalone Electron window, no browser necessary.
 
 ```
 ├── README.md
-├── docs/
-│   └── REGRESSION_CHECKLIST.md
 ├── backend/
 │   ├── electron/
 │   │   └── main.js
