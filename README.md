@@ -41,7 +41,9 @@ Guest Mode provides quick, immediate access to a fully populated demo account wi
 
 ## Screenshots
 
-
+![Photo displaying the dashboard](screenshots/Dashboard)
+![Photo showing the resume builder screen](screenshots/resume-builder-screen)
+![Completed resume](screenshots/finished-demo-resume.png)
 
 ---
 
