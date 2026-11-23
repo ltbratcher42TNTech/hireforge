@@ -143,6 +143,12 @@
                     <button class="btn btn-primary mt-2" id="btnSaveProfile">Save Profile</button>
 
                     <hr>
+                    <!-- User Data Export -->
+                    <h5>Export Your Data</h5>
+                    <p class="text-muted small">Download a JSON copy of your saved profile, education, work experience, projects, skills, certifications, and awards.</p>
+                    <button class="btn btn-primary mb-2" id="btnExportData" type="button">Download My Data</button>
+                    <p id="pExportStatus" class="text-muted small mb-2" aria-live="polite"></p>
+                    <hr>
                     <h5>Change Password</h5>
                     <input type="password" id="txtCurrentPassword" class="form-control mb-2" placeholder="Current Password" aria-label="Current Password">
                     <input type="password" id="txtNewPassword" class="form-control mb-2" placeholder="New Password (8+ characters)" aria-label="New Password">
@@ -516,6 +522,24 @@
             <button class="btn btn-link btn-sm p-0 align-baseline" id="btnAttributionInfo" type="button" data-bs-toggle="modal" data-bs-target="#attributionModal" aria-label="Open library attribution details">View attribution</button>
         </p>
     </footer>
+
+
+     
+    <!-- One-time announcement for new features -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toastExportAnnouncement" class="toast" role="status" aria-live="polite" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">New HireForge Feature!</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                You can now download a copy of your HireForge data as a JSON file!
+                <div class="mt-2">
+                    <button type="button" class="btn btn-primary btn-sm" id="btnToastViewExport">View Export Feature</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Added a simple Bootstrap modal for visible library and framework(not sure if this part is required) attribution. -->
     <!-- AI was used to format the modal and the footer button button above -->

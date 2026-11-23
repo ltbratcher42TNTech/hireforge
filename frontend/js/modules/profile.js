@@ -139,6 +139,49 @@ document.querySelector('#btnSaveProfile').addEventListener('click', async () => 
     document.querySelector('#pProfileStatus').innerText = 'Profile saved successfully.'
 })
 
+
+ // Export User Data
+document.querySelector('#btnExportData').addEventListener('click', async () => {
+    const objButton = document.querySelector('#btnExportData')
+    const objStatus = document.querySelector('#pExportStatus')
+
+    objButton.disabled = true
+    objStatus.innerText = 'Preparing your data export...'
+
+    try {
+        const objResponse = await fetch(`${strBaseURL}/api/export`)
+
+        if (!objResponse.ok) {
+            throw new Error(`Export failed: HTTP ${objResponse.status}`)
+        }
+
+        const objData = await objResponse.json()
+        const strJSON = JSON.stringify(objData, null, 2)
+
+        const objBlob = new Blob([strJSON], { type: 'application/json' })
+        const strURL = URL.createObjectURL(objBlob)
+
+        const objLink = document.createElement('a')
+        objLink.href = strURL
+        objLink.download = `hireforge-export-${new Date().toISOString().split('T')[0]}.json`
+
+        document.body.appendChild(objLink)
+        objLink.click()
+        objLink.remove()
+
+        setTimeout(() => URL.revokeObjectURL(strURL), 1000)
+
+        objStatus.innerText = 'Your data export has been downloaded!'
+
+    } catch (err) {
+        console.error('Data export error:', err)
+        objStatus.innerText = 'Unable to export your data. Please try again.'
+    } finally {
+        objButton.disabled = false
+    }
+})
+
+
 // AI Assisted, button to change password
 document.querySelector('#btnChangePassword').addEventListener('click', async () => {
     const strCurrentPassword = document.querySelector('#txtCurrentPassword').value.trim()

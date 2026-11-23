@@ -83,6 +83,35 @@ document.querySelector('#btnAboutDev').addEventListener('click', () => {
     showSection('aboutDev')
 })
 
+
+
+// one-time feature toast noti (cool way to announce export feature)
+const showExportAnnouncement = () => {
+    const strToastKey = 'hireforge_export_announcement_v1'
+
+    if (localStorage.getItem(strToastKey)) {
+        return
+    }
+
+    const objToastElement = document.querySelector('#toastExportAnnouncement')
+    const objToast = bootstrap.Toast.getOrCreateInstance(objToastElement, {
+        autohide: false
+    })
+
+    objToast.show()
+    localStorage.setItem(strToastKey, 'true')
+}
+
+document.querySelector('#btnToastViewExport').addEventListener('click', () => {
+    showSection('profile')
+    loadProfile()
+    loadGeminiKeyStatus()
+
+    const objToastElement = document.querySelector('#toastExportAnnouncement')
+    bootstrap.Toast.getOrCreateInstance(objToastElement).hide()
+})
+
+
 //auth button wiring and initial page protection.
 document.querySelector('#btnLogin').addEventListener('click', loginUser)
 document.querySelector('#btnRegister').addEventListener('click', registerUser)

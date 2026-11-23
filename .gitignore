@@ -5,3 +5,7 @@ resume_backup.db
 AGENTS.md
 required_statements/
 docs/REGRESSION_CHECKLIST.md
+
+# SQLite database files
+*.db-shm
+*.db-wal

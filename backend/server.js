@@ -123,6 +123,12 @@ app.use('/api/summary', requireUser, require('./routes/summary'))
 app.use('/api/education', requireUser, require('./routes/education'))
 
 // ===================================================================
+// DATA EXPORT ROUTES BELOW
+// ===================================================================
+
+app.use('/api/export', requireUser, require('./routes/export'))
+
+// ===================================================================
 // AI ROUTES BELOW
 // ===================================================================
 

@@ -55,6 +55,7 @@ const handleAuthResponse = async (objResponse) => {
     saveAuthSession(objData.data)
     updateAuthDisplay()
     showSection('dashboard')
+    showExportAnnouncement()
 }
 
 const loginUser = async () => {
@@ -115,6 +116,7 @@ const requireFrontendAuth = () => {
         showAuthSection()
     } else{
         showSection('dashboard')
+        showExportAnnouncement()
     }
 }
 
