@@ -1,10 +1,9 @@
 // initDB.js
-// Creates all tables for the Resume Builder app
+// Creates any missing HireForge tables without deleting existing data
 
 const sqlite3 = require('sqlite3').verbose()
 
 const strDBPath = './resume.db'
-const intDefaultUserID = 1
 
 const db = new sqlite3.Database(strDBPath, (err) => {
     if (err) {
@@ -19,47 +18,14 @@ db.run("PRAGMA foreign_keys = ON")
 
 db.serialize(() => {
 
-    // Gave up the idea of migrating my data, I backed it up and will manually migrate, this will ensure tables are rebuilt from scratch
-    strQuery = `DROP TABLE IF EXISTS tblJobDetails`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblProjectDetails`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblSkills`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblProfile`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblJobs`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblProjects`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblSkillCategories`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblCertifications`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblAwards`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblSummary`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblEducation`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblUsers`
-    db.run(strQuery)
+    // Preserve existing records. CREATE TABLE IF NOT EXISTS is safe to rerun,
+    // but it does not migrate the schema of tables that already exist.
+    // Apply schema changes through a separate, reviewed migration.
 
     // =====================================================
     // USERS
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblUsers (
             UserID INTEGER PRIMARY KEY AUTOINCREMENT,
             Username TEXT NOT NULL UNIQUE,
@@ -73,7 +39,7 @@ db.serialize(() => {
     // =====================================================
     // PROFILE
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblProfile (
             ProfileID TEXT PRIMARY KEY,
             FullName TEXT,
@@ -92,7 +58,7 @@ db.serialize(() => {
     // =====================================================
     // JOBS
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblJobs (
             JobID TEXT PRIMARY KEY,
             Title TEXT,
@@ -111,7 +77,7 @@ db.serialize(() => {
     
     // I learned on delete cascade is super useful from preventing orphaned records, which my db 
     // has and it is annoying
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblJobDetails (
             DetailID TEXT PRIMARY KEY,
             JobID TEXT,
@@ -126,7 +92,7 @@ db.serialize(() => {
     // =====================================================
     // PROJECTS
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblProjects (
             ProjectID TEXT PRIMARY KEY,
             Name TEXT,
@@ -140,7 +106,7 @@ db.serialize(() => {
     // =====================================================
     // PROJECT DETAILS
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblProjectDetails (
             DetailID TEXT PRIMARY KEY,
             ProjectID TEXT,
@@ -155,7 +121,7 @@ db.serialize(() => {
     // =====================================================
     // SKILL CATEGORIES
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblSkillCategories (
             CategoryID TEXT PRIMARY KEY,
             Name TEXT,
@@ -168,7 +134,7 @@ db.serialize(() => {
     // =====================================================
     // SKILLS
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblSkills (
             SkillID TEXT PRIMARY KEY,
             CategoryID TEXT,
@@ -183,7 +149,7 @@ db.serialize(() => {
     // =====================================================
     // CERTIFICATIONS
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblCertifications (
             CertID TEXT PRIMARY KEY,
             Name TEXT,
@@ -198,7 +164,7 @@ db.serialize(() => {
     // =====================================================
     // AWARDS
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblAwards (
             AwardID TEXT PRIMARY KEY,
             Name TEXT,
@@ -214,7 +180,7 @@ db.serialize(() => {
     // =====================================================
     // SUMMARY
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblSummary (
             SummaryID TEXT PRIMARY KEY,
             Content TEXT NOT NULL,
@@ -227,7 +193,7 @@ db.serialize(() => {
     // =====================================================
     // EDUCATION
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblEducation (
             EducationID TEXT PRIMARY KEY,
             Institution TEXT NOT NULL,
