@@ -1,10 +1,10 @@
+
 // initDB.js
-// Creates all tables for the Resume Builder app
+// Creates missing HireForge tables without deleting existing user data.
 
 const sqlite3 = require('sqlite3').verbose()
 
 const strDBPath = './resume.db'
-const intDefaultUserID = 1
 
 const db = new sqlite3.Database(strDBPath, (err) => {
     if (err) {
@@ -19,47 +19,10 @@ db.run("PRAGMA foreign_keys = ON")
 
 db.serialize(() => {
 
-    // Gave up the idea of migrating my data, I backed it up and will manually migrate, this will ensure tables are rebuilt from scratch
-    strQuery = `DROP TABLE IF EXISTS tblJobDetails`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblProjectDetails`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblSkills`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblProfile`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblJobs`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblProjects`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblSkillCategories`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblCertifications`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblAwards`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblSummary`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblEducation`
-    db.run(strQuery)
-
-    strQuery = `DROP TABLE IF EXISTS tblUsers`
-    db.run(strQuery)
-
     // =====================================================
     // USERS
     // =====================================================
-    strQuery = `
+    let strQuery = `
         CREATE TABLE IF NOT EXISTS tblUsers (
             UserID INTEGER PRIMARY KEY AUTOINCREMENT,
             Username TEXT NOT NULL UNIQUE,
@@ -108,9 +71,6 @@ db.serialize(() => {
     // =====================================================
     // JOB DETAILS
     // =====================================================
-    
-    // I learned on delete cascade is super useful from preventing orphaned records, which my db 
-    // has and it is annoying
     strQuery = `
         CREATE TABLE IF NOT EXISTS tblJobDetails (
             DetailID TEXT PRIMARY KEY,
@@ -241,16 +201,13 @@ db.serialize(() => {
         )
     `
     db.run(strQuery)
-
-    
-    console.log("All tables created successfully if they didn't exist.")
 })
 
-// Close connection
+// Close connection after queued statements finish
 db.close((err) => {
     if (err) {
         console.error("Error closing database:", err.message)
     } else {
-        console.log("Database connection closed.")
+        console.log("Database initialization completed.")
     }
 })
